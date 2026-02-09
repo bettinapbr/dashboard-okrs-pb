@@ -1,5 +1,7 @@
 import streamlit as st
  
+import streamlit as st
+ 
 # --- Page Config ---
 st.set_page_config(
     page_title="OKRs PagBrasil",
@@ -7,6 +9,68 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+# --- AUTENTICAÇÃO ---
+def check_password():
+    """Retorna True se o usuário digitou a senha correta."""
+    
+    def password_entered():
+        """Verifica se a senha está correta."""
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Remove a senha da memória
+        else:
+            st.session_state["password_correct"] = False
+
+    # Primeira vez ou senha incorreta
+    if "password_correct" not in st.session_state:
+        # Mostra tela de login
+        st.markdown("""
+        <div style='text-align: center; padding: 100px 0;'>
+            <h1 style='color: #2ECC71;'>🔒 OKRs PagBrasil</h1>
+            <p style='color: #7B9BAF;'>Acesso restrito - Digite a senha</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.text_input(
+            "Senha", 
+            type="password", 
+            on_change=password_entered, 
+            key="password"
+        )
+        return False
+    
+    # Senha incorreta
+    elif not st.session_state["password_correct"]:
+        st.markdown("""
+        <div style='text-align: center; padding: 100px 0;'>
+            <h1 style='color: #2ECC71;'>🔒 OKRs PagBrasil</h1>
+            <p style='color: #7B9BAF;'>Acesso restrito - Digite a senha</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.text_input(
+            "Senha", 
+            type="password", 
+            on_change=password_entered, 
+            key="password"
+        )
+        st.error("😕 Senha incorreta. Tente novamente.")
+        return False
+    
+    # Senha correta
+    else:
+        return True
+
+# Verificar senha antes de mostrar o dashboard
+if not check_password():
+    st.stop()  # Para aqui se não autenticou
+
+# --- Resto do código continua igual ---
+# --- Custom CSS ---
+st.markdown("""
+<style>
+# ... todo o CSS ...
  
 # --- Custom CSS ---
 st.markdown("""
