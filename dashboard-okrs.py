@@ -1,6 +1,6 @@
 import streamlit as st
- 
-# --- Page Config ---
+
+# ─── Page Config ─────────────────────────────────────────────────────
 st.set_page_config(
     page_title="OKRs PagBrasil",
     page_icon="📊",
@@ -8,12 +8,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# --- AUTENTICAÇÃO ---
+
+# ─── Autenticação ────────────────────────────────────────────────────
 def check_password():
     """Retorna True se o usuário digitou a senha correta."""
-    
+
     def password_entered():
-        """Verifica se a senha está correta."""
         if st.session_state["password"] == st.secrets["password"]:
             st.session_state["password_correct"] = True
             del st.session_state["password"]
@@ -21,278 +21,476 @@ def check_password():
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        st.markdown("""
-        <div style='text-align: center; padding: 100px 0;'>
-            <h1 style='color: #2ECC71;'>🔒 OKRs PagBrasil</h1>
-            <p style='color: #7B9BAF;'>Acesso restrito - Digite a senha</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.text_input(
-            "Senha", 
-            type="password", 
-            on_change=password_entered, 
-            key="password"
+        st.markdown(
+            '<div style="text-align:center;padding:100px 0;">'
+            '<h1 style="color:#34D399;">🔒 OKRs PagBrasil</h1>'
+            '<p style="color:#6B7B94;">Acesso restrito — Digite a senha</p>'
+            "</div>",
+            unsafe_allow_html=True,
         )
+        st.text_input("Senha", type="password", on_change=password_entered, key="password")
         return False
-    
+
     elif not st.session_state["password_correct"]:
-        st.markdown("""
-        <div style='text-align: center; padding: 100px 0;'>
-            <h1 style='color: #2ECC71;'>🔒 OKRs PagBrasil</h1>
-            <p style='color: #7B9BAF;'>Acesso restrito - Digite a senha</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.text_input(
-            "Senha", 
-            type="password", 
-            on_change=password_entered, 
-            key="password"
+        st.markdown(
+            '<div style="text-align:center;padding:100px 0;">'
+            '<h1 style="color:#34D399;">🔒 OKRs PagBrasil</h1>'
+            '<p style="color:#6B7B94;">Acesso restrito — Digite a senha</p>'
+            "</div>",
+            unsafe_allow_html=True,
         )
+        st.text_input("Senha", type="password", on_change=password_entered, key="password")
         st.error("😕 Senha incorreta. Tente novamente.")
         return False
-    else:
-        return True
+
+    return True
+
 
 if not check_password():
     st.stop()
- 
-# --- Custom CSS ---
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
- 
-    /* Global */
-    .stApp {
-        background: linear-gradient(135deg, #0F1923 0%, #152736 50%, #0F1923 100%);
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
- 
-    /* Hide Streamlit defaults */
-    #MainMenu, footer, header {visibility: hidden;}
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1400px;
-    }
- 
-    /* Dashboard Title */
-    .dashboard-header {
-        text-align: center;
-        margin-bottom: 2.5rem;
-        position: relative;
-    }
-    .dashboard-header h1 {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #FFFFFF;
-        letter-spacing: 3px;
-        margin: 0;
-        display: inline-block;
-        position: relative;
-    }
-    .dashboard-header h1::after {
-        content: '';
-        position: absolute;
-        bottom: -8px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 60px;
-        height: 3px;
-        background: linear-gradient(90deg, #2ECC71, #1ABC9C);
-        border-radius: 2px;
-    }
-    .dashboard-subtitle {
-        color: #7B9BAF;
-        font-size: 0.9rem;
-        margin-top: 1rem;
-        letter-spacing: 1px;
-    }
- 
-    /* OKR Card */
-    .okr-card {
-        background: linear-gradient(145deg, #1A3A4A 0%, #15303E 100%);
-        border: 1px solid rgba(46, 204, 113, 0.15);
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        height: 100%;
-    }
-    .okr-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #2ECC71, #1ABC9C);
-        border-radius: 16px 16px 0 0;
-    }
-    .okr-card:hover {
-        border-color: rgba(46, 204, 113, 0.35);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
- 
-    /* Card Title */
-    .card-title-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 1.2rem;
-    }
-    .card-title-badge {
-        background: rgba(214, 232, 236, 0.12);
-        border: 1px solid rgba(214, 232, 236, 0.2);
-        color: #D6E8EC;
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        padding: 6px 14px;
-        border-radius: 8px;
-    }
-    .status-dot {
-        width: 10px;
-        height: 10px;
-        background: #2ECC71;
-        border-radius: 50%;
-        display: inline-block;
-        box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
-        animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-        0%, 100% { box-shadow: 0 0 8px rgba(46, 204, 113, 0.5); }
-        50% { box-shadow: 0 0 16px rgba(46, 204, 113, 0.8); }
-    }
- 
-    /* KR Row */
-    .kr-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-        padding: 10px 14px;
-        margin-bottom: 8px;
-        transition: background 0.2s ease;
-    }
-    .kr-row:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
-    .kr-name {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.82rem;
-        font-weight: 500;
-    }
-    .kr-value {
-        color: #FFFFFF;
-        font-size: 0.85rem;
-        font-weight: 700;
-        white-space: nowrap;
-    }
- 
-    /* Streamlit column gap fix */
-    [data-testid="stHorizontalBlock"] {
-        gap: 1rem;
-        align-items: stretch;
-    }
-    [data-testid="stColumn"] > div {
-        height: 100%;
-    }
-    [data-testid="stColumn"] > div > div {
-        height: 100%;
-    }
-</style>
-""", unsafe_allow_html=True)
- 
-# --- Data ---
-okrs = {
-    "CRESCIMENTO": [
-        ("Receita", "R$ 12.4M"),
-        ("Receita NB", "R$ 8.7M"),
-        ("Receita XB", "R$ 3.7M"),
-    ],
-    "INOVAÇÃO / PRODUTO": [
-        ("Receita prod. <24m", "R$ 3.1M"),
-        ("% clientes c/ novos produtos", "34%"),
-        ("% clientes c/ novas func.", "28%"),
-        ("Taxa Falhas Críticas", "0.12%"),
-        ("Índice inovação percebida", "8.1"),
-        ("Taxa de conversão", "72.5%"),
-    ],
-    "EXCELÊNCIA OPERACIONAL": [
-        ("Receita por pessoa", "R$ 285K"),
-        ("Tempo onboarding NB", "12 dias"),
-        ("Tempo onboarding XB", "18 dias"),
-        ("% processos documentados", "67%"),
-    ],
-    "PESSOAS": [
-        ("Índice de engajamento", "81%"),
-        ("% certificação interna", "63%"),
-        ("eNPS", "72"),
-        ("Pontuação GPTW", "84"),
-    ],
-    "CLIENTES": [
-        ("NPS", "+68"),
-        ("% Contas Não Ativadas", "15%"),
-        ("MRR Churn Rate", "1.8%"),
-        ("% atendimentos no SLA", "94%"),
-        ("Taxa chargeback", "R$ 142K"),
-        ("CSAT", "4.3/5"),
-        ("Indicador branding", "A construir"),
-        ("Nº solic./contas ativas", "0.32"),
-    ],
+
+
+# ─── Constants ───────────────────────────────────────────────────────
+STATUS_COLORS = {"green": "#34D399", "yellow": "#FBBF24", "red": "#F87171"}
+STATUS_LABELS = {"green": "On Track", "yellow": "Atenção", "red": "Em Risco"}
+
+# ─── Data ────────────────────────────────────────────────────────────
+OKRS = [
+    {
+        "title": "CRESCIMENTO",
+        "subtitle": "Impulsionar o crescimento sustentável e rentável",
+        "accent": "#4A9EFF",
+        "status": "green",
+        "chart": [8.1, 8.5, 9.2, 9.0, 9.8, 10.2, 10.5, 11.0, 11.3, 11.8, 12.0, 12.4],
+        "krs": [
+            {"name": "Receita", "val": "R$ 12.4M", "ant": "R$ 11.8M", "meta": "R$ 12.0M", "pct": 100},
+            {"name": "Receita Nacional (NB)", "val": "R$ 8.7M", "ant": "R$ 8.2M", "meta": "R$ 8.5M", "pct": 100},
+            {"name": "Receita Internacional (XB)", "val": "R$ 3.7M", "ant": "R$ 3.5M", "meta": "R$ 4.0M", "pct": 93},
+        ],
+    },
+    {
+        "title": "INOVAÇÃO / PRODUTO",
+        "subtitle": "Consolidar liderança em inovação e diferenciação",
+        "accent": "#A78BFA",
+        "status": "green",
+        "chart": [1.2, 1.4, 1.6, 1.8, 2.0, 2.1, 2.3, 2.5, 2.7, 2.8, 2.9, 3.1],
+        "krs": [
+            {"name": "Receita prod. < 24 meses", "val": "R$ 3.1M", "ant": "R$ 2.9M", "meta": "R$ 3.0M", "pct": 100},
+            {"name": "% clientes c/ novos prod.", "val": "34%", "ant": "31%", "meta": "35%", "pct": 97},
+            {"name": "% clientes c/ novas func.", "val": "28%", "ant": "25%", "meta": "30%", "pct": 93},
+            {"name": "Taxa de Falhas Críticas", "val": "0.12%", "ant": "0.15%", "meta": "≤ 0.10%", "pct": 83},
+            {"name": "Índice inovação percebida", "val": "8.1", "ant": "7.8", "meta": "8.0", "pct": 100},
+            {"name": "Taxa de conversão", "val": "72.5%", "ant": "70.1%", "meta": "72.0%", "pct": 100},
+        ],
+    },
+    {
+        "title": "EXCELÊNCIA OPERACIONAL",
+        "subtitle": "Elevar a excelência operacional e eficiência",
+        "accent": "#FBBF24",
+        "status": "yellow",
+        "chart": [310, 305, 298, 295, 290, 288, 285, 283, 280, 282, 284, 285],
+        "krs": [
+            {"name": "Receita por pessoa", "val": "R$ 285K", "ant": "R$ 290K", "meta": "R$ 300K", "pct": 95},
+            {"name": "Tempo onboarding NB", "val": "12 dias", "ant": "14 dias", "meta": "≤ 10 dias", "pct": 83},
+            {"name": "Tempo onboarding XB", "val": "18 dias", "ant": "20 dias", "meta": "≤ 15 dias", "pct": 83},
+            {"name": "% processos documentados", "val": "67%", "ant": "62%", "meta": "75%", "pct": 89},
+        ],
+    },
+    {
+        "title": "PESSOAS",
+        "subtitle": "Desenvolver pessoas e lideranças para o próximo ciclo",
+        "accent": "#F472B6",
+        "status": "green",
+        "chart": [58, 60, 62, 63, 64, 66, 67, 68, 69, 70, 71, 72],
+        "krs": [
+            {"name": "Índice de engajamento", "val": "81%", "ant": "78%", "meta": "80%", "pct": 100},
+            {"name": "% de certificação interna", "val": "63%", "ant": "58%", "meta": "70%", "pct": 90},
+            {"name": "eNPS", "val": "72", "ant": "68", "meta": "70", "pct": 100},
+            {"name": "Pontuação GPTW", "val": "84", "ant": "81", "meta": "85", "pct": 99},
+        ],
+    },
+    {
+        "title": "CLIENTES",
+        "subtitle": "Garantir experiências fluidas que impulsionem satisfação",
+        "accent": "#22D3EE",
+        "status": "red",
+        "chart": [72, 71, 70, 69, 70, 69, 68, 69, 68, 67, 68, 68],
+        "krs": [
+            {"name": "NPS", "val": "+68", "ant": "+71", "meta": "+75", "pct": 91},
+            {"name": "% Contas Não Ativadas", "val": "15%", "ant": "17%", "meta": "≤ 10%", "pct": 67},
+            {"name": "MRR Churn Rate", "val": "1.8%", "ant": "2.1%", "meta": "≤ 1.5%", "pct": 83},
+            {"name": "% atendimentos no SLA", "val": "94%", "ant": "92%", "meta": "97%", "pct": 97},
+            {"name": "Taxa de chargeback", "val": "R$ 142K", "ant": "R$ 155K", "meta": "≤ R$ 120K", "pct": 85},
+            {"name": "CSAT", "val": "4.3/5", "ant": "4.2/5", "meta": "4.5/5", "pct": 96},
+            {"name": "Indicador de branding", "val": "—", "ant": "—", "meta": "A definir", "pct": 0},
+            {"name": "Nº solic./contas ativas", "val": "0.32", "ant": "0.35", "meta": "≤ 0.25", "pct": 78},
+        ],
+    },
+]
+
+
+# ─── Helpers ─────────────────────────────────────────────────────────
+def pct_color(pct: int) -> str:
+    if pct >= 95:
+        return "#34D399"
+    if pct >= 70:
+        return "#FBBF24"
+    return "#F87171"
+
+
+def sparkline_svg(data: list, color: str, uid: int) -> str:
+    w, h, pad = 120, 50, 3
+    if len(data) < 2:
+        return ""
+    lo, hi = min(data), max(data)
+    rng = hi - lo or 1
+    pts = []
+    for i, v in enumerate(data):
+        x = pad + i / (len(data) - 1) * (w - 2 * pad)
+        y = pad + (1 - (v - lo) / rng) * (h - 2 * pad)
+        pts.append((x, y))
+    poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+    fill_pts = f"{pad},{h} {poly} {w - pad},{h}"
+    lx, ly = pts[-1]
+    return (
+        f'<svg width="120" height="50" viewBox="0 0 {w} {h}">'
+        f'<defs><linearGradient id="sg{uid}" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0%" stop-color="{color}" stop-opacity="0.30"/>'
+        f'<stop offset="100%" stop-color="{color}" stop-opacity="0.03"/>'
+        f'</linearGradient></defs>'
+        f'<polygon points="{fill_pts}" fill="url(#sg{uid})"/>'
+        f'<polyline points="{poly}" fill="none" stroke="{color}" '
+        f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+        f'<circle cx="{lx:.1f}" cy="{ly:.1f}" r="3" fill="{color}"/>'
+        f'</svg>'
+    )
+
+
+
+# ─── CSS ─────────────────────────────────────────────────────────────
+st.markdown("""<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* === GLOBAL === */
+.stApp {
+    background: radial-gradient(ellipse at 12% 8%, #141B2D 0%, #0F1117 50%, #0B0E14 100%);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
- 
- 
-def render_card(title: str, krs: list):
-    """Render a single OKR card as HTML."""
-    kr_html = ""
-    for name, value in krs:
-        kr_html += f"""
-<div class="kr-row">
-<span class="kr-name">{name}</span>
-<span class="kr-value">{value}</span>
-</div>"""
- 
-    st.markdown(f"""
-<div class="okr-card">
-<div class="card-title-row">
-<span class="card-title-badge">{title}</span>
-<span class="status-dot"></span>
-</div>
-        {kr_html}
-</div>
-    """, unsafe_allow_html=True)
- 
- 
-# --- Header ---
+#MainMenu, footer, header { visibility: hidden; }
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1500px;
+}
+[data-testid="stHorizontalBlock"] {
+    gap: 1.1rem;
+    align-items: stretch;
+}
+[data-testid="stColumn"] > div,
+[data-testid="stColumn"] > div > div { height: 100%; }
+
+/* === HEADER === */
+.hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid #1C2132;
+}
+.hdr-left { display: flex; align-items: center; gap: 14px; }
+.hdr-logo { height: 38px; opacity: 0.92; }
+.hdr-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #FFF;
+    margin: 0;
+    letter-spacing: -0.3px;
+}
+.hdr-sub { color: #6B7B94; font-size: 0.82rem; margin-top: 2px; }
+.hdr-badge {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #262D40;
+    color: #7B8CA6;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* === SUMMARY === */
+.sum-row { display: flex; gap: 0.8rem; margin-bottom: 1.4rem; }
+.sum-card {
+    flex: 1;
+    background: rgba(255,255,255,0.035);
+    border: 1px solid #1C2132;
+    border-radius: 12px;
+    padding: 14px 0;
+    text-align: center;
+    transition: background 0.2s;
+}
+.sum-card:hover { background: rgba(255,255,255,0.06); }
+.sum-val { font-size: 1.5rem; font-weight: 800; color: #FFF; }
+.sum-lbl {
+    font-size: 0.68rem;
+    color: #5E6E85;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-top: 2px;
+}
+
+/* === OKR CARD === */
+.okr-card {
+    background: linear-gradient(160deg, #181D2C 0%, #141822 100%);
+    border: 1px solid #232940;
+    border-radius: 16px;
+    padding: 20px 20px 16px;
+    height: 420px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.okr-card:hover {
+    transform: translateY(-3px);
+    border-color: #384060;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+}
+
+/* Card head */
+.c-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.c-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+.c-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    animation: dot-pulse 2.5s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+    0%, 100% { box-shadow: 0 0 4px 1px currentColor; }
+    50% { box-shadow: 0 0 12px 3px currentColor; }
+}
+.c-sub {
+    color: #6B7B94;
+    font-size: 0.76rem;
+    margin-bottom: 14px;
+    line-height: 1.35;
+}
+
+/* Card body */
+.c-body {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+}
+.c-krs {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+/* Scrollbar */
+.c-krs::-webkit-scrollbar { width: 4px; }
+.c-krs::-webkit-scrollbar-track { background: transparent; }
+.c-krs::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.12);
+    border-radius: 2px;
+}
+.c-krs::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.c-spark {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 6px;
+    opacity: 0.85;
+}
+
+/* KR row */
+.kr {
+    padding: 9px 0 8px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.kr:first-child { border-top: none; padding-top: 0; }
+.kr-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+}
+.kr-nm { color: #8090A8; font-size: 0.76rem; font-weight: 500; }
+.kr-vl { color: #FFF; font-size: 0.92rem; font-weight: 700; white-space: nowrap; }
+.kr-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+}
+.kr-track {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.kr-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.kr-pct {
+    font-size: 0.68rem;
+    font-weight: 600;
+    min-width: 30px;
+    text-align: right;
+}
+.kr-meta {
+    color: #4A5670;
+    font-size: 0.65rem;
+    letter-spacing: 0.2px;
+}
+
+/* === FOOTER === */
+.ftr {
+    text-align: center;
+    color: #3D4A60;
+    font-size: 0.72rem;
+    padding-top: 1.2rem;
+    margin-top: 1.8rem;
+    border-top: 1px solid #1C2132;
+    letter-spacing: 0.5px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1100px) {
+    .hdr { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+    .c-body { grid-template-columns: 1fr; }
+    .c-spark { width: 100%; height: 50px; }
+}
+@media (max-width: 768px) {
+    .sum-row { flex-wrap: wrap; }
+    .sum-card { min-width: 45%; }
+    .hdr-title { font-size: 1.3rem; }
+    .block-container { padding-top: 1.2rem; }
+}
+</style>""", unsafe_allow_html=True)
+
+
+# ─── Header ──────────────────────────────────────────────────────────
 st.markdown("""
-<div class="dashboard-header">
-<h1>OKRs PAGBRASIL</h1>
-<div class="dashboard-subtitle">PAINEL DE OBJETIVOS E RESULTADOS-CHAVE</div>
+<div class="hdr">
+    <div>
+        <div class="hdr-title">OKRs Estratégicos</div>
+        <div class="hdr-sub">PagBrasil &middot; Indicadores de Performance</div>
+    </div>
+    <span class="hdr-badge">Atualizado em Fev / 2026</span>
 </div>
 """, unsafe_allow_html=True)
- 
-# --- Row 1: 3 cards ---
-cols1 = st.columns(3)
-titles = list(okrs.keys())
- 
-for i, col in enumerate(cols1):
-    with col:
-        render_card(titles[i], okrs[titles[i]])
- 
-# --- Row 2: 2 cards centered ---
-spacer_left, col_p, col_c, spacer_right = st.columns([0.5, 1, 1, 0.5])
- 
+
+
+# ─── Summary Metrics ─────────────────────────────────────────────────
+total_krs = sum(len(o["krs"]) for o in OKRS)
+on_track = sum(1 for o in OKRS if o["status"] == "green")
+attention = sum(1 for o in OKRS if o["status"] == "yellow")
+at_risk = sum(1 for o in OKRS if o["status"] == "red")
+valid_pcts = [kr["pct"] for o in OKRS for kr in o["krs"] if kr["pct"] > 0]
+avg_pct = round(sum(valid_pcts) / len(valid_pcts)) if valid_pcts else 0
+
+st.markdown(f"""
+<div class="sum-row">
+    <div class="sum-card">
+        <div class="sum-val">{total_krs}</div>
+        <div class="sum-lbl">Key Results</div>
+    </div>
+    <div class="sum-card">
+        <div class="sum-val" style="color:#34D399">{on_track}</div>
+        <div class="sum-lbl">On Track</div>
+    </div>
+    <div class="sum-card">
+        <div class="sum-val" style="color:#FBBF24">{attention}</div>
+        <div class="sum-lbl">Atenção</div>
+    </div>
+    <div class="sum-card">
+        <div class="sum-val" style="color:#F87171">{at_risk}</div>
+        <div class="sum-lbl">Em Risco</div>
+    </div>
+    <div class="sum-card">
+        <div class="sum-val">{avg_pct}%</div>
+        <div class="sum-lbl">Progresso Médio</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+# ─── Card Renderer ───────────────────────────────────────────────────
+def render_card(okr: dict, idx: int) -> None:
+    accent = okr["accent"]
+    sc = STATUS_COLORS[okr["status"]]
+
+    rows = ""
+    for kr in okr["krs"]:
+        pc = pct_color(kr["pct"])
+        w = min(kr["pct"], 100)
+        pct_text = f'{kr["pct"]}%' if kr["pct"] > 0 else "—"
+        rows += (
+            f'<div class="kr">'
+            f'  <div class="kr-top">'
+            f'    <span class="kr-nm">{kr["name"]}</span>'
+            f'    <span class="kr-vl">{kr["val"]}</span>'
+            f'  </div>'
+            f'  <div class="kr-bar-row">'
+            f'    <div class="kr-track">'
+            f'      <div class="kr-fill" style="width:{w}%;background:{pc}"></div>'
+            f'    </div>'
+            f'    <span class="kr-pct" style="color:{pc}">{pct_text}</span>'
+            f'  </div>'
+            f'  <div class="kr-meta">Ant: {kr["ant"]}  ·  Meta: {kr["meta"]}</div>'
+            f'</div>'
+        )
+
+    spark = sparkline_svg(okr["chart"], accent, idx)
+
+    st.markdown(
+        f'<div class="okr-card" style="border-left:4px solid {accent};">'
+        f'  <div class="c-head">'
+        f'    <span class="c-title" style="color:{accent}">{okr["title"]}</span>'
+        f'    <span class="c-dot" style="background:{sc};color:{sc}"></span>'
+        f'  </div>'
+        f'  <div class="c-sub">{okr["subtitle"]}</div>'
+        f'  <div class="c-body">'
+        f'    <div class="c-krs">{rows}</div>'
+        f'    <div class="c-spark">{spark}</div>'
+        f'  </div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+# ─── Layout: Row 1 (3 cards) ────────────────────────────────────────
+row1 = st.columns(3)
+for i in range(3):
+    with row1[i]:
+        render_card(OKRS[i], i)
+
+# ─── Layout: Row 2 (2 cards centered) ───────────────────────────────
+_, col_p, col_c, _ = st.columns([0.5, 1, 1, 0.5])
 with col_p:
-    render_card(titles[3], okrs[titles[3]])
- 
+    render_card(OKRS[3], 3)
 with col_c:
-    render_card(titles[4], okrs[titles[4]])
+    render_card(OKRS[4], 4)
+
+# ─── Footer ──────────────────────────────────────────────────────────
+st.markdown("""
+<div class="ftr">
+    PagBrasil &nbsp;·&nbsp; Dashboard Estratégico de OKRs &nbsp;·&nbsp; People &amp; Development
+</div>
+""", unsafe_allow_html=True)
