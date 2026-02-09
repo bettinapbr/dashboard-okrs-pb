@@ -1,7 +1,5 @@
 import streamlit as st
  
-import streamlit as st
- 
 # --- Page Config ---
 st.set_page_config(
     page_title="OKRs PagBrasil",
@@ -18,13 +16,11 @@ def check_password():
         """Verifica se a senha está correta."""
         if st.session_state["password"] == st.secrets["password"]:
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Remove a senha da memória
+            del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
-    # Primeira vez ou senha incorreta
     if "password_correct" not in st.session_state:
-        # Mostra tela de login
         st.markdown("""
         <div style='text-align: center; padding: 100px 0;'>
             <h1 style='color: #2ECC71;'>🔒 OKRs PagBrasil</h1>
@@ -40,7 +36,6 @@ def check_password():
         )
         return False
     
-    # Senha incorreta
     elif not st.session_state["password_correct"]:
         st.markdown("""
         <div style='text-align: center; padding: 100px 0;'>
@@ -57,20 +52,11 @@ def check_password():
         )
         st.error("😕 Senha incorreta. Tente novamente.")
         return False
-    
-    # Senha correta
     else:
         return True
 
-# Verificar senha antes de mostrar o dashboard
 if not check_password():
-    st.stop()  # Para aqui se não autenticou
-
-# --- Resto do código continua igual ---
-# --- Custom CSS ---
-st.markdown("""
-<style>
-# ... todo o CSS ...
+    st.stop()
  
 # --- Custom CSS ---
 st.markdown("""
@@ -265,7 +251,7 @@ okrs = {
 }
  
  
-def render_card(title: str, krs: list[tuple[str, str]]):
+def render_card(title: str, krs: list):
     """Render a single OKR card as HTML."""
     kr_html = ""
     for name, value in krs:
