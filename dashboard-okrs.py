@@ -481,6 +481,9 @@ for i in range(3):
     with row1[i]:
         render_card(OKRS[i], i)
 
+# ✅ Espaçamento entre as linhas de cards
+st.markdown('<div style="height: 18px;"></div>', unsafe_allow_html=True)
+
 # ─── Layout: Row 2 (2 cards centered) ───────────────────────────────
 _, col_p, col_c, _ = st.columns([0.5, 1, 1, 0.5])
 with col_p:
