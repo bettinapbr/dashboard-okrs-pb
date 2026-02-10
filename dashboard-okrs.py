@@ -285,7 +285,7 @@ st.markdown(
     letter-spacing: -0.3px;
 }
 .hdr-logo-right{
-  height: 24px;          /* <<< controla o tamanho (teste 16–24) */
+  height: 48px;          /* <<< controla o tamanho (teste 16–24) */
   width: auto;
   opacity: 0.95;
   background: transparent;
