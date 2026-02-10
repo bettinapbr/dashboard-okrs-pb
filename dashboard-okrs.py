@@ -284,6 +284,16 @@ st.markdown(
     font-family: 'Montserrat','Segoe UI',system-ui,sans-serif;
     letter-spacing: -0.3px;
 }
+.hdr-logo-right{
+  height: 16px;          /* <<< controla o tamanho (teste 16–24) */
+  width: auto;
+  opacity: 0.95;
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  margin-left: 12px;
+}
 .hdr-badge {
     background: rgba(255,255,255,0.05);
     border: 1px solid #262D40;
@@ -407,11 +417,12 @@ st.markdown(
         <div class="hdr-title">OKRs Estratégicos</div>
         <div class="hdr-sub">PagBrasil &middot; Indicadores de Performance</div>
     </div>
-    <img class="hdr-badge-img" src="https://i.imgur.com/CYyv2PD.png" alt="Atualização" />
+    <img class="hdr-logo-right" src="https://i.imgur.com/CYyv2PD.png" alt="PagBrasil" />
 </div>
 """,
     unsafe_allow_html=True,
 )
+
 
 # ─── Summary Metrics ─────────────────────────────────────────────────
 total_krs = sum(len(o["krs"]) for o in OKRS)
