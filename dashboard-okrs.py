@@ -344,20 +344,39 @@ st.markdown(
 }
 .c-sub { color: #6B7B94; font-size: 0.76rem; margin-bottom: 14px; line-height: 1.35; }
 
-/* estilo do botão "Veja mais" do Streamlit (só dentro do card) */
-.card-action [data-testid="stButton"] button{
+/* === BOTÃO "VEJA MAIS" POSICIONADO DENTRO DO CARD === */
+/* Faz a coluna ser um contexto de posicionamento */
+[data-testid="stColumn"] {
+    position: relative;
+}
+
+/* Posiciona o botão absolutamente no canto superior direito do card */
+[data-testid="stColumn"] [data-testid="stButton"] {
+    position: absolute !important;
+    top: 18px;
+    right: 20px;
+    z-index: 10;
+    width: auto !important;
+}
+
+/* Estilo do botão "Veja mais" */
+[data-testid="stColumn"] [data-testid="stButton"] button {
     border-radius: 999px !important;
-    padding: 6px 12px !important;
-    font-size: 0.75rem !important;
-    font-weight: 800 !important;
+    padding: 5px 14px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
     background: rgba(255,255,255,0.06) !important;
     border: 1px solid rgba(255,255,255,0.16) !important;
-    color: rgba(246,246,246,0.92) !important;
-    line-height: 1 !important;
+    color: rgba(246,246,246,0.88) !important;
+    line-height: 1.2 !important;
+    min-height: unset !important;
+    height: auto !important;
+    white-space: nowrap;
+    transition: background 180ms ease, border-color 180ms ease;
 }
-.card-action [data-testid="stButton"] button:hover{
-    background: rgba(255,255,255,0.10) !important;
-    border-color: rgba(255,255,255,0.28) !important;
+[data-testid="stColumn"] [data-testid="stButton"] button:hover {
+    background: rgba(255,255,255,0.12) !important;
+    border-color: rgba(255,255,255,0.30) !important;
 }
 
 /* Card body */
@@ -481,7 +500,7 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    # layout do topo do card (titulo + sinaleira)
+    # Card HTML completo (sem botão — o botão é posicionado via CSS absoluto)
     st.markdown(
         f"""
         <div class="okr-card" style="border-left:4px solid {accent};">
@@ -490,7 +509,6 @@ def render_card(okr: dict, idx: int) -> None:
               <span class="c-title" style="color:{accent}">{okr["title"]}</span>
               <span class="c-dot" style="background:{sc};color:{sc}"></span>
             </div>
-            <div class="card-action" id="card-action-{idx}"></div>
           </div>
           <div class="c-sub">{okr["subtitle"]}</div>
           <div class="c-body">
@@ -501,17 +519,11 @@ def render_card(okr: dict, idx: int) -> None:
         unsafe_allow_html=True,
     )
 
-    # botão "Veja mais" (fica ao lado do título)
-    # (renderizado depois, mas posicionado no topo via HTML slot acima)
-    # solução simples: renderiza o botão logo após o card e usa CSS pra ficar estilizado;
-    # fica visualmente no card porque o Streamlit coloca no fluxo, então usamos container abaixo.
-    with st.container():
-        # um container só pra aplicar a classe do CSS no botão
-        st.markdown('<div class="card-action">', unsafe_allow_html=True)
-        if st.button("Veja mais", key=f"open_{idx}"):
-            open_okr(idx)
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+    # Botão "Veja mais" — renderizado pelo Streamlit, posicionado
+    # dentro do card header via CSS (position: absolute no topo direito)
+    if st.button("Veja mais", key=f"open_{idx}"):
+        open_okr(idx)
+        st.rerun()
 
 
 # ─── Layout: Row 1 (3 cards) ────────────────────────────────────────
