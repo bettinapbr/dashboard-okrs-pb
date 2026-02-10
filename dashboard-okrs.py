@@ -59,7 +59,7 @@ OKRS = [
     {
         "title": "CRESCIMENTO",
         "subtitle": "Impulsionar o crescimento sustentável e rentável",
-        "accent": "#0058B5",
+        "accent": "#54CA30",
         "status": "green",
         "chart": [8.1, 8.5, 9.2, 9.0, 9.8, 10.2, 10.5, 11.0, 11.3, 11.8, 12.0, 12.4],
         "krs": [
@@ -71,7 +71,7 @@ OKRS = [
     {
         "title": "INOVAÇÃO / PRODUTO",
         "subtitle": "Consolidar liderança em inovação e diferenciação",
-        "accent": "#4B36F8",
+        "accent": "#54CA30",
         "status": "green",
         "chart": [1.2, 1.4, 1.6, 1.8, 2.0, 2.1, 2.3, 2.5, 2.7, 2.8, 2.9, 3.1],
         "krs": [
@@ -86,7 +86,7 @@ OKRS = [
     {
         "title": "EXCELÊNCIA OPERACIONAL",
         "subtitle": "Elevar a excelência operacional e eficiência",
-        "accent": "#FFB035",
+        "accent": "#54CA30",
         "status": "yellow",
         "chart": [310, 305, 298, 295, 290, 288, 285, 283, 280, 282, 284, 285],
         "krs": [
@@ -99,7 +99,7 @@ OKRS = [
     {
         "title": "PESSOAS",
         "subtitle": "Desenvolver pessoas e lideranças para o próximo ciclo",
-        "accent": "#54CA30",
+        "accent": "#0058B5",
         "status": "green",
         "chart": [58, 60, 62, 63, 64, 66, 67, 68, 69, 70, 71, 72],
         "krs": [
@@ -112,7 +112,7 @@ OKRS = [
     {
         "title": "CLIENTES",
         "subtitle": "Garantir experiências fluidas que impulsionem satisfação",
-        "accent": "#007BFF",
+        "accent": "#0058B5",
         "status": "red",
         "chart": [72, 71, 70, 69, 70, 69, 68, 69, 68, 67, 68, 68],
         "krs": [
