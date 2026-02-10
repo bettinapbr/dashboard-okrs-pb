@@ -138,13 +138,6 @@ def pct_color(pct: int) -> str:
 
 
 def okr_status_from_krs(krs: list[dict]) -> str:
-    """
-    Calcula o status do OKR baseado nos KRs.
-      - ignora pct == 0 (ex.: 'A definir')
-      - se algum pct < 70 => red
-      - senão se algum pct < 95 => yellow
-      - senão => green
-    """
     pcts = [kr.get("pct", 0) for kr in krs if kr.get("pct", 0) > 0]
     if not pcts:
         return "yellow"
@@ -163,6 +156,7 @@ def close_okr():
     st.session_state["selected_okr"] = None
 
 
+# ─── Dialog (NÚMEROS EM CIMA, GRÁFICO EMBAIXO) ───────────────────────
 @st.dialog("Detalhes do OKR", width="large")
 def okr_dialog(okr: dict, idx: int):
     accent = okr["accent"]
@@ -198,10 +192,7 @@ def okr_dialog(okr: dict, idx: int):
         unsafe_allow_html=True,
     )
 
-        months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-    series = okr.get("chart", [])
-    df = pd.DataFrame({"Mês": months[: len(series)], "Valor": series})
-
+    # ✅ NÚMEROS EM CIMA
     st.subheader("Key Results")
     for kr in okr["krs"]:
         pc = pct_color(kr["pct"])
@@ -226,8 +217,21 @@ def okr_dialog(okr: dict, idx: int):
             unsafe_allow_html=True,
         )
 
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+
+    # ✅ GRÁFICO EMBAIXO
+    months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    series = okr.get("chart", [])
+    df = pd.DataFrame({"Mês": months[: len(series)], "Valor": series})
+
     st.subheader("Evolução (últimos 12 meses)")
     st.line_chart(df, x="Mês", y="Valor", use_container_width=True)
+
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+    if st.button("Fechar", use_container_width=True, key=f"close_{idx}"):
+        close_okr()
+        st.rerun()
+
 
 # ─── Session State: open dialog if selected ───────────────────────────
 if "selected_okr" not in st.session_state:
@@ -249,11 +253,7 @@ st.markdown(
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 #MainMenu, footer, header { visibility: hidden; }
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    max-width: 1500px;
-}
+.block-container { padding-top: 2rem; padding-bottom: 2rem; max-width: 1500px; }
 [data-testid="stHorizontalBlock"] { gap: 1.1rem; align-items: stretch; }
 [data-testid="stColumn"] > div,
 [data-testid="stColumn"] > div > div { height: 100%; }
@@ -321,11 +321,7 @@ st.markdown(
     overflow: hidden;
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
-.okr-card:hover {
-    transform: translateY(-3px);
-    border-color: #384060;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
-}
+.okr-card:hover { transform: translateY(-3px); border-color: #384060; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
 
 /* Click overlay: botão invisível por cima do card todo */
 .okr-click [data-testid="stButton"] button{
@@ -343,13 +339,8 @@ st.markdown(
 /* Card head */
 .c-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
 .c-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
-.c-dot {
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-    animation: dot-pulse 2.5s ease-in-out infinite;
-}
+.c-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+    animation: dot-pulse 2.5s ease-in-out infinite; }
 @keyframes dot-pulse {
     0%, 100% { box-shadow: 0 0 4px 1px currentColor; }
     50% { box-shadow: 0 0 12px 3px currentColor; }
@@ -479,14 +470,13 @@ def render_card(okr: dict, idx: int) -> None:
 
     st.markdown('<div class="okr-wrap">', unsafe_allow_html=True)
 
-    # botão invisível que cobre o card inteiro
+    # botão invisível que cobre o card inteiro (abre modal)
     st.markdown('<div class="okr-click">', unsafe_allow_html=True)
     if st.button(" ", key=f"open_card_{idx}"):
         open_okr(idx)
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # o card em si
     st.markdown(
         f'<div class="okr-card" style="border-left:4px solid {accent};">'
         f'  <div class="c-head">'
