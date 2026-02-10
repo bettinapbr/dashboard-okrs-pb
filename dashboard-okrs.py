@@ -198,36 +198,36 @@ def okr_dialog(okr: dict, idx: int):
         unsafe_allow_html=True,
     )
 
-    months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+        months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
     series = okr.get("chart", [])
     df = pd.DataFrame({"Mês": months[: len(series)], "Valor": series})
 
     st.subheader("Key Results")
-for kr in okr["krs"]:
-    pc = pct_color(kr["pct"])
-    w = min(kr["pct"], 100)
-    pct_text = f'{kr["pct"]}%' if kr["pct"] > 0 else "—"
-    st.markdown(
-        f"""
-        <div style="padding:10px 6px;border-top:1px solid rgba(255,255,255,0.06);">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-            <span style="color:#8090A8;font-size:0.85rem;font-weight:600;">{kr["name"]}</span>
-            <span style="color:#FFF;font-size:0.95rem;font-weight:800;white-space:nowrap;">{kr["val"]}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-            <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
-              <div style="width:{w}%;height:100%;background:{pc};"></div>
+    for kr in okr["krs"]:
+        pc = pct_color(kr["pct"])
+        w = min(kr["pct"], 100)
+        pct_text = f'{kr["pct"]}%' if kr["pct"] > 0 else "—"
+        st.markdown(
+            f"""
+            <div style="padding:10px 6px;border-top:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+                <span style="color:#8090A8;font-size:0.85rem;font-weight:600;">{kr["name"]}</span>
+                <span style="color:#FFF;font-size:0.95rem;font-weight:800;white-space:nowrap;">{kr["val"]}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+                  <div style="width:{w}%;height:100%;background:{pc};"></div>
+                </div>
+                <span style="min-width:36px;text-align:right;color:{pc};font-weight:800;font-size:0.8rem;">{pct_text}</span>
+              </div>
+              <div style="color:#4A5670;font-size:0.75rem;">Ant: {kr["ant"]} · Meta: {kr["meta"]}</div>
             </div>
-            <span style="min-width:36px;text-align:right;color:{pc};font-weight:800;font-size:0.8rem;">{pct_text}</span>
-          </div>
-          <div style="color:#4A5670;font-size:0.75rem;">Ant: {kr["ant"]} · Meta: {kr["meta"]}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
 
-st.subheader("Evolução (últimos 12 meses)")
-st.line_chart(df, x="Mês", y="Valor", use_container_width=True)
+    st.subheader("Evolução (últimos 12 meses)")
+    st.line_chart(df, x="Mês", y="Valor", use_container_width=True)
 
 # ─── Session State: open dialog if selected ───────────────────────────
 if "selected_okr" not in st.session_state:
