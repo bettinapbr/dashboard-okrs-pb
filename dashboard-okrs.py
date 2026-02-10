@@ -192,7 +192,6 @@ def okr_dialog(okr: dict, idx: int):
         unsafe_allow_html=True,
     )
 
-    # ✅ NÚMEROS EM CIMA
     st.subheader("Key Results")
     for kr in okr["krs"]:
         pc = pct_color(kr["pct"])
@@ -219,7 +218,6 @@ def okr_dialog(okr: dict, idx: int):
 
     st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
 
-    # ✅ GRÁFICO EMBAIXO
     months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
     series = okr.get("chart", [])
     df = pd.DataFrame({"Mês": months[: len(series)], "Valor": series})
@@ -321,10 +319,6 @@ st.markdown(
 }
 
 /* === OKR CARD === */
-.okr-wrap{
-    position: relative;
-    height: 100%;
-}
 .okr-card {
     background: linear-gradient(160deg, #181D2C 0%, #141822 100%);
     border: 1px solid #232940;
@@ -339,35 +333,9 @@ st.markdown(
 }
 .okr-card:hover { transform: translateY(-3px); border-color: #384060; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
 
-/* Click overlay: botão invisível por cima do card todo */
-.okr-click{
-    position: absolute;
-    inset: 0;
-    z-index: 10;
-}
-.okr-click [data-testid="stButton"],
-.okr-click [data-testid="stButton"] > div{
-    width: 100%;
-    height: 100%;
-}
-.okr-click [data-testid="stButton"] button{
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    outline: none !important;
-    box-shadow: none !important;
-}
-.okr-click [data-testid="stButton"] button:focus{
-    outline: none !important;
-    box-shadow: none !important;
-}
-
-/* Card head */
-.c-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+/* cabeçalho do card com botão */
+.c-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.c-head-left { display:flex; align-items:center; gap:10px; min-width:0; }
 .c-title { font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
 .c-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; animation: dot-pulse 2.5s ease-in-out infinite; }
 @keyframes dot-pulse {
@@ -375,6 +343,22 @@ st.markdown(
     50% { box-shadow: 0 0 12px 3px currentColor; }
 }
 .c-sub { color: #6B7B94; font-size: 0.76rem; margin-bottom: 14px; line-height: 1.35; }
+
+/* estilo do botão "Veja mais" do Streamlit (só dentro do card) */
+.card-action [data-testid="stButton"] button{
+    border-radius: 999px !important;
+    padding: 6px 12px !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.16) !important;
+    color: rgba(246,246,246,0.92) !important;
+    line-height: 1 !important;
+}
+.card-action [data-testid="stButton"] button:hover{
+    background: rgba(255,255,255,0.10) !important;
+    border-color: rgba(255,255,255,0.28) !important;
+}
 
 /* Card body */
 .c-body { display: grid; grid-template-columns: 1fr; gap: 12px; flex: 1; min-height: 0; }
@@ -497,15 +481,16 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    st.markdown('<div class="okr-wrap">', unsafe_allow_html=True)
-
-    # 1) card primeiro
+    # layout do topo do card (titulo + sinaleira)
     st.markdown(
         f"""
         <div class="okr-card" style="border-left:4px solid {accent};">
           <div class="c-head">
-            <span class="c-title" style="color:{accent}">{okr["title"]}</span>
-            <span class="c-dot" style="background:{sc};color:{sc}"></span>
+            <div class="c-head-left">
+              <span class="c-title" style="color:{accent}">{okr["title"]}</span>
+              <span class="c-dot" style="background:{sc};color:{sc}"></span>
+            </div>
+            <div class="card-action" id="card-action-{idx}"></div>
           </div>
           <div class="c-sub">{okr["subtitle"]}</div>
           <div class="c-body">
@@ -516,14 +501,18 @@ def render_card(okr: dict, idx: int) -> None:
         unsafe_allow_html=True,
     )
 
-    # 2) overlay por cima (depois do card)
-    st.markdown('<div class="okr-click">', unsafe_allow_html=True)
-    if st.button(" ", key=f"open_card_{idx}"):
-        open_okr(idx)
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+    # botão "Veja mais" (fica ao lado do título)
+    # (renderizado depois, mas posicionado no topo via HTML slot acima)
+    # solução simples: renderiza o botão logo após o card e usa CSS pra ficar estilizado;
+    # fica visualmente no card porque o Streamlit coloca no fluxo, então usamos container abaixo.
+    with st.container():
+        # um container só pra aplicar a classe do CSS no botão
+        st.markdown('<div class="card-action">', unsafe_allow_html=True)
+        if st.button("Veja mais", key=f"open_{idx}"):
+            open_okr(idx)
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # ─── Layout: Row 1 (3 cards) ────────────────────────────────────────
 row1 = st.columns(3)
