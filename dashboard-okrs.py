@@ -156,7 +156,7 @@ def close_okr():
     st.session_state["selected_okr"] = None
 
 
-# ─── Dialog (NÚMEROS EM CIMA, GRÁFICO EMBAIXO) ───────────────────────
+# ─── Dialog ──────────────────────────────────────────────────────────
 @st.dialog("Detalhes do OKR", width="large")
 def okr_dialog(okr: dict, idx: int):
     accent = okr["accent"]
@@ -231,7 +231,7 @@ def okr_dialog(okr: dict, idx: int):
         st.rerun()
 
 
-# ─── Session State: open dialog if selected ───────────────────────────
+# ─── Session State ────────────────────────────────────────────────────
 if "selected_okr" not in st.session_state:
     st.session_state["selected_okr"] = None
 
@@ -255,8 +255,6 @@ st.markdown(
 [data-testid="stHorizontalBlock"] { gap: 1.1rem; align-items: stretch; }
 [data-testid="stColumn"] > div,
 [data-testid="stColumn"] > div > div { height: 100%; }
-
-/* (opcional) esconde ícones de expandir do Streamlit */
 [data-testid="stElementToolbar"] { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 
@@ -333,7 +331,6 @@ st.markdown(
 }
 .okr-card:hover { transform: translateY(-3px); border-color: #384060; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
 
-/* cabeçalho do card com botão */
 .c-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
 .c-head-left { display:flex; align-items:center; gap:10px; min-width:0; }
 .c-title { font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
@@ -344,22 +341,28 @@ st.markdown(
 }
 .c-sub { color: #6B7B94; font-size: 0.76rem; margin-bottom: 14px; line-height: 1.35; }
 
-/* === BOTÃO "VEJA MAIS" POSICIONADO DENTRO DO CARD === */
-/* Faz a coluna ser um contexto de posicionamento */
-[data-testid="stColumn"] {
-    position: relative;
+/* ============================================================
+   BOTÃO "VEJA MAIS" — renderizado ANTES do card pelo Streamlit,
+   reposicionado visualmente DENTRO do header do card via CSS.
+   ============================================================ */
+
+/* Wrapper do botão: float right + margin negativo pra sobrepor o card abaixo */
+[data-testid="stColumn"] > div > div > div:has([data-testid="stButton"]) {
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin-bottom: -44px !important;
+    padding-right: 20px !important;
+    padding-top: 18px !important;
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
 }
 
-/* Posiciona o botão absolutamente no canto superior direito do card */
-[data-testid="stColumn"] [data-testid="stButton"] {
-    position: absolute !important;
-    top: 18px;
-    right: 20px;
-    z-index: 10;
-    width: auto !important;
+[data-testid="stColumn"] > div > div > div:has([data-testid="stButton"]) * {
+    pointer-events: all !important;
 }
 
-/* Estilo do botão "Veja mais" */
+/* Estilo pill do botão */
 [data-testid="stColumn"] [data-testid="stButton"] button {
     border-radius: 999px !important;
     padding: 5px 14px !important;
@@ -371,7 +374,7 @@ st.markdown(
     line-height: 1.2 !important;
     min-height: unset !important;
     height: auto !important;
-    white-space: nowrap;
+    white-space: nowrap !important;
     transition: background 180ms ease, border-color 180ms ease;
 }
 [data-testid="stColumn"] [data-testid="stButton"] button:hover {
@@ -500,7 +503,12 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    # Card HTML completo (sem botão — o botão é posicionado via CSS absoluto)
+    # ① Botão PRIMEIRO — CSS vai reposicioná-lo dentro do card header
+    if st.button("Veja mais", key=f"open_{idx}"):
+        open_okr(idx)
+        st.rerun()
+
+    # ② Card HTML DEPOIS — botão fica sobreposto via margin negativo
     st.markdown(
         f"""
         <div class="okr-card" style="border-left:4px solid {accent};">
@@ -518,12 +526,6 @@ def render_card(okr: dict, idx: int) -> None:
         """,
         unsafe_allow_html=True,
     )
-
-    # Botão "Veja mais" — renderizado pelo Streamlit, posicionado
-    # dentro do card header via CSS (position: absolute no topo direito)
-    if st.button("Veja mais", key=f"open_{idx}"):
-        open_okr(idx)
-        st.rerun()
 
 
 # ─── Layout: Row 1 (3 cards) ────────────────────────────────────────
