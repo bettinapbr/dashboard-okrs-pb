@@ -245,12 +245,12 @@ if st.session_state["selected_okr"] is not None:
 # ─── CSS ─────────────────────────────────────────────────────────────
 st.markdown(
     """<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
 
 /* === GLOBAL === */
 .stApp {
     background: radial-gradient(ellipse at 12% 8%, #141B2D 0%, #0F1117 50%, #0B0E14 100%);
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem; padding-bottom: 2rem; max-width: 1500px; }
@@ -268,6 +268,7 @@ st.markdown(
     border-bottom: 1px solid #1C2132;
 }
 .hdr-title {
+    font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif;
     font-size: 1.7rem;
     font-weight: 800;
     color: #FFF;
@@ -338,7 +339,7 @@ st.markdown(
 
 /* Card head */
 .c-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-.c-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+.c-title { font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif ;font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
 .c-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0;
     animation: dot-pulse 2.5s ease-in-out infinite; }
 @keyframes dot-pulse {
@@ -398,7 +399,7 @@ st.markdown(
         <div class="hdr-title">OKRs Estratégicos</div>
         <div class="hdr-sub">PagBrasil &middot; Indicadores de Performance</div>
     </div>
-    <span class="hdr-badge">Atualizado em Fev / 2026</span>
+    <img class="hdr-badge-img" src="https://i.imgur.com/CYyv2PD.png" alt="Atualização" />
 </div>
 """,
     unsafe_allow_html=True,
