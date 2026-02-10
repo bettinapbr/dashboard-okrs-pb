@@ -258,6 +258,10 @@ st.markdown(
 [data-testid="stColumn"] > div,
 [data-testid="stColumn"] > div > div { height: 100%; }
 
+/* (opcional) esconde ícones de expandir do Streamlit */
+[data-testid="stElementToolbar"] { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+
 /* === HEADER === */
 .hdr {
     display: flex;
@@ -276,16 +280,16 @@ st.markdown(
     letter-spacing: -0.3px;
 }
 .hdr-sub{
-    font-size: 1.7rem;          /* igual ao .hdr-title */
-    font-weight: 800;           /* igual ao .hdr-title */
+    font-size: 1.7rem;
+    font-weight: 800;
     line-height: 1.05;
-    margin-top: 0;              /* remove o “desnível” */
+    margin-top: 0;
     color: rgba(246,246,246,0.92);
     font-family: 'Montserrat','Segoe UI',system-ui,sans-serif;
     letter-spacing: -0.3px;
 }
 .hdr-logo-right{
-  height: 48px;          /* <<< controla o tamanho (teste 16–24) */
+  height: 48px;
   width: auto;
   opacity: 0.95;
   background: transparent;
@@ -293,16 +297,6 @@ st.markdown(
   padding: 0;
   border-radius: 0;
   margin-left: 12px;
-}
-.hdr-badge {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid #262D40;
-    color: #7B8CA6;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.76rem;
-    font-weight: 500;
-    white-space: nowrap;
 }
 
 /* === SUMMARY === */
@@ -327,7 +321,10 @@ st.markdown(
 }
 
 /* === OKR CARD === */
-.okr-wrap { position: relative; height: 100%; }
+.okr-wrap{
+    position: relative;
+    height: 100%;
+}
 .okr-card {
     background: linear-gradient(160deg, #181D2C 0%, #141822 100%);
     border: 1px solid #232940;
@@ -343,9 +340,17 @@ st.markdown(
 .okr-card:hover { transform: translateY(-3px); border-color: #384060; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
 
 /* Click overlay: botão invisível por cima do card todo */
-.okr-click [data-testid="stButton"] button{
+.okr-click{
     position: absolute;
     inset: 0;
+    z-index: 10;
+}
+.okr-click [data-testid="stButton"],
+.okr-click [data-testid="stButton"] > div{
+    width: 100%;
+    height: 100%;
+}
+.okr-click [data-testid="stButton"] button{
     width: 100%;
     height: 100%;
     opacity: 0;
@@ -353,13 +358,18 @@ st.markdown(
     border: none;
     background: transparent;
     cursor: pointer;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.okr-click [data-testid="stButton"] button:focus{
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Card head */
 .c-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-.c-title { font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif ;font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
-.c-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0;
-    animation: dot-pulse 2.5s ease-in-out infinite; }
+.c-title { font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+.c-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; animation: dot-pulse 2.5s ease-in-out infinite; }
 @keyframes dot-pulse {
     0%, 100% { box-shadow: 0 0 4px 1px currentColor; }
     50% { box-shadow: 0 0 12px 3px currentColor; }
@@ -422,7 +432,6 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
 
 # ─── Summary Metrics ─────────────────────────────────────────────────
 total_krs = sum(len(o["krs"]) for o in OKRS)
@@ -490,26 +499,29 @@ def render_card(okr: dict, idx: int) -> None:
 
     st.markdown('<div class="okr-wrap">', unsafe_allow_html=True)
 
-    # botão invisível que cobre o card inteiro (abre modal)
+    # 1) card primeiro
+    st.markdown(
+        f"""
+        <div class="okr-card" style="border-left:4px solid {accent};">
+          <div class="c-head">
+            <span class="c-title" style="color:{accent}">{okr["title"]}</span>
+            <span class="c-dot" style="background:{sc};color:{sc}"></span>
+          </div>
+          <div class="c-sub">{okr["subtitle"]}</div>
+          <div class="c-body">
+            <div class="c-krs">{rows}</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # 2) overlay por cima (depois do card)
     st.markdown('<div class="okr-click">', unsafe_allow_html=True)
     if st.button(" ", key=f"open_card_{idx}"):
         open_okr(idx)
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown(
-        f'<div class="okr-card" style="border-left:4px solid {accent};">'
-        f'  <div class="c-head">'
-        f'    <span class="c-title" style="color:{accent}">{okr["title"]}</span>'
-        f'    <span class="c-dot" style="background:{sc};color:{sc}"></span>'
-        f'  </div>'
-        f'  <div class="c-sub">{okr["subtitle"]}</div>'
-        f'  <div class="c-body">'
-        f'    <div class="c-krs">{rows}</div>'
-        f'  </div>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
