@@ -8,7 +8,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-
 # ─── Autenticação ────────────────────────────────────────────────────
 def check_password():
     """Retorna True se o usuário digitou a senha correta."""
@@ -77,7 +76,7 @@ OKRS = [
         "krs": [
             {"name": "Receita prod. < 24 meses", "val": "R$ 3.1M", "ant": "R$ 2.9M", "meta": "R$ 3.0M", "pct": 100},
             {"name": "% clientes c/ novos prod.", "val": "34%", "ant": "31%", "meta": "35%", "pct": 97},
-            {"name": "% clientes c/ novas func.", "val": "28%", "ant": "25%", "meta": "30%", "pct": 93},
+            {"name": "% clientes c/ novas func.", "val": "28%", "ant": "25%", "meta": "30", "pct": 93},
             {"name": "Taxa de Falhas Críticas", "val": "0.12%", "ant": "0.15%", "meta": "≤ 0.10%", "pct": 83},
             {"name": "Índice inovação percebida", "val": "8.1", "ant": "7.8", "meta": "8.0", "pct": 100},
             {"name": "Taxa de conversão", "val": "72.5%", "ant": "70.1%", "meta": "72.0%", "pct": 100},
@@ -128,7 +127,6 @@ OKRS = [
     },
 ]
 
-
 # ─── Helpers ─────────────────────────────────────────────────────────
 def pct_color(pct: int) -> str:
     if pct >= 95:
@@ -137,34 +135,23 @@ def pct_color(pct: int) -> str:
         return "#FBBF24"
     return "#F87171"
 
-
-def sparkline_svg(data: list, color: str, uid: int) -> str:
-    w, h, pad = 120, 50, 3
-    if len(data) < 2:
-        return ""
-    lo, hi = min(data), max(data)
-    rng = hi - lo or 1
-    pts = []
-    for i, v in enumerate(data):
-        x = pad + i / (len(data) - 1) * (w - 2 * pad)
-        y = pad + (1 - (v - lo) / rng) * (h - 2 * pad)
-        pts.append((x, y))
-    poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
-    fill_pts = f"{pad},{h} {poly} {w - pad},{h}"
-    lx, ly = pts[-1]
-    return (
-        f'<svg width="120" height="50" viewBox="0 0 {w} {h}">'
-        f'<defs><linearGradient id="sg{uid}" x1="0" y1="0" x2="0" y2="1">'
-        f'<stop offset="0%" stop-color="{color}" stop-opacity="0.30"/>'
-        f'<stop offset="100%" stop-color="{color}" stop-opacity="0.03"/>'
-        f'</linearGradient></defs>'
-        f'<polygon points="{fill_pts}" fill="url(#sg{uid})"/>'
-        f'<polyline points="{poly}" fill="none" stroke="{color}" '
-        f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
-        f'<circle cx="{lx:.1f}" cy="{ly:.1f}" r="3" fill="{color}"/>'
-        f'</svg>'
-    )
-
+def okr_status_from_krs(krs: list[dict]) -> str:
+    """
+    Calcula o status do OKR baseado nos KRs.
+    Regras:
+      - ignora pct == 0 (ex.: 'A definir')
+      - se algum pct < 70 => red
+      - senão se algum pct < 95 => yellow
+      - senão => green
+    """
+    pcts = [kr.get("pct", 0) for kr in krs if kr.get("pct", 0) > 0]
+    if not pcts:
+        return "yellow"  # fallback quando tudo estiver "A definir"
+    if any(p < 70 for p in pcts):
+        return "red"
+    if any(p < 95 for p in pcts):
+        return "yellow"
+    return "green"
 
 
 # ─── CSS ─────────────────────────────────────────────────────────────
@@ -288,7 +275,7 @@ st.markdown("""<style>
 /* Card body */
 .c-body {
     display: grid;
-    grid-template-columns: 1fr 120px;
+    grid-template-columns: 1fr; /* <<< removido o espaço do gráfico */
     gap: 12px;
     flex: 1;
     min-height: 0;
@@ -307,13 +294,6 @@ st.markdown("""<style>
     border-radius: 2px;
 }
 .c-krs::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
-.c-spark {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 6px;
-    opacity: 0.85;
-}
 
 /* KR row */
 .kr {
@@ -373,8 +353,6 @@ st.markdown("""<style>
 /* === RESPONSIVE === */
 @media (max-width: 1100px) {
     .hdr { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
-    .c-body { grid-template-columns: 1fr; }
-    .c-spark { width: 100%; height: 50px; }
 }
 @media (max-width: 768px) {
     .sum-row { flex-wrap: wrap; }
@@ -399,10 +377,12 @@ st.markdown("""
 
 # ─── Summary Metrics ─────────────────────────────────────────────────
 total_krs = sum(len(o["krs"]) for o in OKRS)
-on_track = sum(1 for o in OKRS if o["status"] == "green")
-attention = sum(1 for o in OKRS if o["status"] == "yellow")
-at_risk = sum(1 for o in OKRS if o["status"] == "red")
-valid_pcts = [kr["pct"] for o in OKRS for kr in o["krs"] if kr["pct"] > 0]
+# status por OKR agora é calculado pelos KRs
+okr_statuses = [okr_status_from_krs(o["krs"]) for o in OKRS]
+on_track = sum(1 for s in okr_statuses if s == "green")
+attention = sum(1 for s in okr_statuses if s == "yellow")
+at_risk = sum(1 for s in okr_statuses if s == "red")
+valid_pcts = [kr["pct"] for o in OKRS for kr in o["krs"] if kr.get("pct", 0) > 0]
 avg_pct = round(sum(valid_pcts) / len(valid_pcts)) if valid_pcts else 0
 
 st.markdown(f"""
@@ -434,7 +414,8 @@ st.markdown(f"""
 # ─── Card Renderer ───────────────────────────────────────────────────
 def render_card(okr: dict, idx: int) -> None:
     accent = okr["accent"]
-    sc = STATUS_COLORS[okr["status"]]
+    status = okr_status_from_krs(okr["krs"])          # <<< status calculado
+    sc = STATUS_COLORS[status]
 
     rows = ""
     for kr in okr["krs"]:
@@ -457,8 +438,6 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    spark = sparkline_svg(okr["chart"], accent, idx)
-
     st.markdown(
         f'<div class="okr-card" style="border-left:4px solid {accent};">'
         f'  <div class="c-head">'
@@ -468,7 +447,6 @@ def render_card(okr: dict, idx: int) -> None:
         f'  <div class="c-sub">{okr["subtitle"]}</div>'
         f'  <div class="c-body">'
         f'    <div class="c-krs">{rows}</div>'
-        f'    <div class="c-spark">{spark}</div>'
         f'  </div>'
         f'</div>',
         unsafe_allow_html=True,
