@@ -22,9 +22,9 @@ def check_password():
 
     if "password_correct" not in st.session_state:
         st.markdown(
-            '<div style="text-align:center;padding:100px 0;">'
-            '<h1 style="color:#34D399;">🔒 OKRs PagBrasil</h1>'
-            '<p style="color:#6B7B94;">Acesso restrito — Digite a senha</p>'
+            '<div ="text-align:center;padding:100px 0;">'
+            '<h1 ="color:#34D399;">🔒 OKRs PagBrasil</h1>'
+            '<p ="color:#6B7B94;">Acesso restrito — Digite a senha</p>'
             "</div>",
             unsafe_allow_html=True,
         )
@@ -33,9 +33,9 @@ def check_password():
 
     elif not st.session_state["password_correct"]:
         st.markdown(
-            '<div style="text-align:center;padding:100px 0;">'
-            '<h1 style="color:#34D399;">🔒 OKRs PagBrasil</h1>'
-            '<p style="color:#6B7B94;">Acesso restrito — Digite a senha</p>'
+            '<div ="text-align:center;padding:100px 0;">'
+            '<h1 ="color:#34D399;">🔒 OKRs PagBrasil</h1>'
+            '<p ="color:#6B7B94;">Acesso restrito — Digite a senha</p>'
             "</div>",
             unsafe_allow_html=True,
         )
@@ -165,7 +165,7 @@ def okr_dialog(okr: dict, idx: int):
 
     st.markdown(
         f"""
-        <div style="
+        <div ="
             background: linear-gradient(160deg, #181D2C 0%, #141822 100%);
             border: 1px solid #2B3350;
             border-left: 6px solid {accent};
@@ -173,18 +173,18 @@ def okr_dialog(okr: dict, idx: int):
             padding: 18px;
             margin-bottom: 12px;
         ">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div ="display:flex;justify-content:space-between;align-items:center;gap:12px;">
             <div>
-              <div style="color:{accent};font-weight:800;letter-spacing:1.3px;font-size:0.85rem;">
+              <div ="color:{accent};font-weight:800;letter-spacing:1.3px;font-size:0.85rem;">
                 {okr["title"]}
               </div>
-              <div style="color:#6B7B94;margin-top:6px;line-height:1.35;">
+              <div ="color:#6B7B94;margin-top:6px;line-height:1.35;">
                 {okr["subtitle"]}
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;white-space:nowrap;">
-              <span style="width:10px;height:10px;border-radius:50%;background:{sc};display:inline-block;"></span>
-              <span style="color:#9DB2CC;font-size:0.85rem;">{STATUS_LABELS[status]}</span>
+            <div ="display:flex;align-items:center;gap:10px;white-space:nowrap;">
+              <span ="width:10px;height:10px;border-radius:50%;background:{sc};display:inline-block;"></span>
+              <span ="color:#9DB2CC;font-size:0.85rem;">{STATUS_LABELS[status]}</span>
             </div>
           </div>
         </div>
@@ -200,24 +200,24 @@ def okr_dialog(okr: dict, idx: int):
         pct_text = f'{kr["pct"]}%' if kr["pct"] > 0 else "—"
         st.markdown(
             f"""
-            <div style="padding:10px 6px;border-top:1px solid rgba(255,255,255,0.06);">
-              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-                <span style="color:#8090A8;font-size:0.85rem;font-weight:600;">{kr["name"]}</span>
-                <span style="color:#FFF;font-size:0.95rem;font-weight:800;white-space:nowrap;">{kr["val"]}</span>
+            <div ="padding:10px 6px;border-top:1px solid rgba(255,255,255,0.06);">
+              <div ="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+                <span ="color:#8090A8;font-size:0.85rem;font-weight:600;">{kr["name"]}</span>
+                <span ="color:#FFF;font-size:0.95rem;font-weight:800;white-space:nowrap;">{kr["val"]}</span>
               </div>
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-                <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
-                  <div style="width:{w}%;height:100%;background:{pc};"></div>
+              <div ="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <div ="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+                  <div ="width:{w}%;height:100%;background:{pc};"></div>
                 </div>
-                <span style="min-width:36px;text-align:right;color:{pc};font-weight:800;font-size:0.8rem;">{pct_text}</span>
+                <span ="min-width:36px;text-align:right;color:{pc};font-weight:800;font-size:0.8rem;">{pct_text}</span>
               </div>
-              <div style="color:#4A5670;font-size:0.75rem;">Ant: {kr["ant"]} · Meta: {kr["meta"]}</div>
+              <div ="color:#4A5670;font-size:0.75rem;">Ant: {kr["ant"]} · Meta: {kr["meta"]}</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div ='height:10px;'></div>", unsafe_allow_html=True)
 
     # ✅ GRÁFICO EMBAIXO
     months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
@@ -227,7 +227,7 @@ def okr_dialog(okr: dict, idx: int):
     st.subheader("Evolução (últimos 12 meses)")
     st.line_chart(df, x="Mês", y="Valor", use_container_width=True)
 
-    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div ='height:10px;'></div>", unsafe_allow_html=True)
     if st.button("Fechar", use_container_width=True, key=f"close_{idx}"):
         close_okr()
         st.rerun()
@@ -244,7 +244,7 @@ if st.session_state["selected_okr"] is not None:
 
 # ─── CSS ─────────────────────────────────────────────────────────────
 st.markdown(
-    """<style>
+    """<>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
 
 /* === GLOBAL === */
@@ -334,6 +334,7 @@ st.markdown(
     border-radius: 16px;
     padding: 20px 20px 16px;
     height: 420px;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -343,9 +344,25 @@ st.markdown(
 .okr-card:hover { transform: translateY(-3px); border-color: #384060; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
 
 /* Click overlay: botão invisível por cima do card todo */
-.okr-click [data-testid="stButton"] button{
+.okr-wrap { 
+    position: relative; 
+    height: 100%; 
+}
+
+.okr-click{
     position: absolute;
     inset: 0;
+    z-index: 10; /* fica acima do card */
+}
+
+/* garante que o componente do Streamlit ocupe 100% do overlay */
+.okr-click [data-testid="stButton"],
+.okr-click [data-testid="stButton"] > div{
+    width: 100%;
+    height: 100%;
+}
+
+.okr-click [data-testid="stButton"] button{
     width: 100%;
     height: 100%;
     opacity: 0;
@@ -353,6 +370,13 @@ st.markdown(
     border: none;
     background: transparent;
     cursor: pointer;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.okr-click [data-testid="stButton"] button:focus{
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Card head */
@@ -405,7 +429,7 @@ st.markdown(
     .hdr-title { font-size: 1.3rem; }
     .block-container { padding-top: 1.2rem; }
 }
-</style>""",
+</>""",
     unsafe_allow_html=True,
 )
 
@@ -441,15 +465,15 @@ st.markdown(
         <div class="sum-lbl">Key Results</div>
     </div>
     <div class="sum-card">
-        <div class="sum-val" style="color:#34D399">{on_track}</div>
+        <div class="sum-val" ="color:#34D399">{on_track}</div>
         <div class="sum-lbl">On Track</div>
     </div>
     <div class="sum-card">
-        <div class="sum-val" style="color:#FBBF24">{attention}</div>
+        <div class="sum-val" ="color:#FBBF24">{attention}</div>
         <div class="sum-lbl">Atenção</div>
     </div>
     <div class="sum-card">
-        <div class="sum-val" style="color:#F87171">{at_risk}</div>
+        <div class="sum-val" ="color:#F87171">{at_risk}</div>
         <div class="sum-lbl">Em Risco</div>
     </div>
     <div class="sum-card">
@@ -480,9 +504,9 @@ def render_card(okr: dict, idx: int) -> None:
             f'  </div>'
             f'  <div class="kr-bar-row">'
             f'    <div class="kr-track">'
-            f'      <div class="kr-fill" style="width:{w}%;background:{pc}"></div>'
+            f'      <div class="kr-fill" ="width:{w}%;background:{pc}"></div>'
             f'    </div>'
-            f'    <span class="kr-pct" style="color:{pc}">{pct_text}</span>'
+            f'    <span class="kr-pct" ="color:{pc}">{pct_text}</span>'
             f'  </div>'
             f'  <div class="kr-meta">Ant: {kr["ant"]}  ·  Meta: {kr["meta"]}</div>'
             f'</div>'
@@ -498,10 +522,10 @@ def render_card(okr: dict, idx: int) -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown(
-        f'<div class="okr-card" style="border-left:4px solid {accent};">'
+        f'<div class="okr-card" ="border-left:4px solid {accent};">'
         f'  <div class="c-head">'
-        f'    <span class="c-title" style="color:{accent}">{okr["title"]}</span>'
-        f'    <span class="c-dot" style="background:{sc};color:{sc}"></span>'
+        f'    <span class="c-title" ="color:{accent}">{okr["title"]}</span>'
+        f'    <span class="c-dot" ="background:{sc};color:{sc}"></span>'
         f'  </div>'
         f'  <div class="c-sub">{okr["subtitle"]}</div>'
         f'  <div class="c-body">'
@@ -519,7 +543,7 @@ for i in range(3):
     with row1[i]:
         render_card(OKRS[i], i)
 
-st.markdown('<div style="height: 18px;"></div>', unsafe_allow_html=True)
+st.markdown('<div ="height: 18px;"></div>', unsafe_allow_html=True)
 
 # ─── Layout: Row 2 (2 cards centered) ───────────────────────────────
 _, col_p, col_c, _ = st.columns([0.5, 1, 1, 0.5])
