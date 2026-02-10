@@ -275,7 +275,15 @@ st.markdown(
     margin: 0;
     letter-spacing: -0.3px;
 }
-.hdr-sub { color: #6B7B94; font-size: 0.82rem; margin-top: 2px; }
+.hdr-sub{
+    font-size: 1.7rem;          /* igual ao .hdr-title */
+    font-weight: 800;           /* igual ao .hdr-title */
+    line-height: 1.05;
+    margin-top: 0;              /* remove o “desnível” */
+    color: rgba(246,246,246,0.92);
+    font-family: 'Montserrat','Segoe UI',system-ui,sans-serif;
+    letter-spacing: -0.3px;
+}
 .hdr-badge {
     background: rgba(255,255,255,0.05);
     border: 1px solid #262D40;
