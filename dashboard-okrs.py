@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 
 # ─── Page Config ─────────────────────────────────────────────────────
 st.set_page_config(
@@ -170,6 +171,24 @@ def resolve_kr_series(okr: dict, kr: dict, kr_idx: int) -> tuple[list[float], st
     midpoint = (len(okr_series) - 1) / 2
     derived = [round(v + offset + ((i - midpoint) * slope), 2) for i, v in enumerate(okr_series)]
     return derived, "derived"
+
+
+def infer_y_axis_config(kr: dict) -> tuple[str, str]:
+    """Infer Y-axis title and numeric format from KR metadata."""
+    probe = " ".join([str(kr.get("name", "")), str(kr.get("val", "")), str(kr.get("ant", "")), str(kr.get("meta", ""))]).lower()
+    if "r$" in probe:
+        return "Valor (R$)", ",.2f"
+    if "%" in probe:
+        return "Percentual (%)", ".1f"
+    if "dia" in probe:
+        return "Dias", ".0f"
+    if "/5" in probe:
+        return "Pontuação (0-5)", ".2f"
+    if "nps" in probe or "enps" in probe:
+        return "Pontos (NPS)", ".0f"
+    if "pontuação" in probe or "indice" in probe or "índice" in probe:
+        return "Índice", ".2f"
+    return "Valor", ",.2f"
 
 
 def open_okr(idx: int):
@@ -344,7 +363,31 @@ def okr_dialog_kr(okr: dict, idx: int):
     elif series_source == "none":
         st.caption("Sem dados de série para este KR/OKR.")
     if len(series) > 0:
-        st.line_chart(df, x="Mês", y="Valor", use_container_width=True)
+        y_min = min(series)
+        y_max = max(series)
+        y_pad = (y_max - y_min) * 0.12 if y_max != y_min else max(abs(y_max) * 0.12, 1)
+        y_domain = [y_min - y_pad, y_max + y_pad]
+        y_title, y_format = infer_y_axis_config(selected_kr)
+
+        chart = (
+            alt.Chart(df)
+            .mark_line(point=True, strokeWidth=2.5)
+            .encode(
+                x=alt.X(
+                    "Mês:N",
+                    sort=["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+                    axis=alt.Axis(title="Mês", labelAngle=0),
+                ),
+                y=alt.Y(
+                    "Valor:Q",
+                    scale=alt.Scale(domain=y_domain, nice=True, zero=False),
+                    axis=alt.Axis(title=y_title, format=y_format),
+                ),
+                tooltip=[alt.Tooltip("Mês:N", title="Mês"), alt.Tooltip("Valor:Q", title=y_title, format=y_format)],
+            )
+            .properties(height=320)
+        )
+        st.altair_chart(chart, use_container_width=True)
     else:
         st.info("Sem dados de evolução para este KR.")
 
