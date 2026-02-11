@@ -147,6 +147,30 @@ def okr_status_from_krs(krs: list[dict]) -> str:
         return "yellow"
     return "green"
 
+def resolve_kr_series(okr: dict, kr: dict, kr_idx: int) -> tuple[list[float], str]:
+    """Resolve the chart series for a KR.
+
+    Order:
+    1) Explicit kr["chart"]
+    2) Deterministic per-KR derived series from okr["chart"] (so click changes now)
+    3) Empty series
+    """
+    kr_series = kr.get("chart")
+    if isinstance(kr_series, list) and len(kr_series) > 0:
+        return kr_series, "kr"
+
+    okr_series = okr.get("chart", [])
+    if not okr_series:
+        return [], "none"
+
+    amplitude = max(abs(v) for v in okr_series) or 1
+    center = (len(okr.get("krs", [])) - 1) / 2
+    offset = (kr_idx - center) * (amplitude * 0.015)
+    slope = ((kr.get("pct", 0) - 85) / 100) * (amplitude * 0.02)
+    midpoint = (len(okr_series) - 1) / 2
+    derived = [round(v + offset + ((i - midpoint) * slope), 2) for i, v in enumerate(okr_series)]
+    return derived, "derived"
+
 
 def open_okr(idx: int):
     st.session_state["selected_okr"] = idx
@@ -311,12 +335,14 @@ def okr_dialog_kr(okr: dict, idx: int):
 
     selected_kr = okr["krs"][selected_kr_idx]
     months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-    series = selected_kr.get("chart") or okr.get("chart", [])
+    series, series_source = resolve_kr_series(okr, selected_kr, selected_kr_idx)
     df = pd.DataFrame({"Mês": months[: len(series)], "Valor": series})
 
     st.subheader(f'Evolução (últimos 12 meses) - {selected_kr["name"]}')
-    if "chart" not in selected_kr:
-        st.caption("Sem série específica do KR; exibindo a série padrão do OKR.")
+    if series_source == "derived":
+        st.caption("Série derivada automaticamente para este KR. Para série oficial, preencha `chart` no KR.")
+    elif series_source == "none":
+        st.caption("Sem dados de série para este KR/OKR.")
     if len(series) > 0:
         st.line_chart(df, x="Mês", y="Valor", use_container_width=True)
     else:
