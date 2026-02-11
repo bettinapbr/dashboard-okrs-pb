@@ -150,15 +150,16 @@ def okr_status_from_krs(krs: list[dict]) -> str:
 
 def open_okr(idx: int):
     st.session_state["selected_okr"] = idx
+    st.session_state["selected_kr_idx"] = 0
 
 
 def close_okr():
     st.session_state["selected_okr"] = None
+    st.session_state["selected_kr_idx"] = None
 
 
 # ─── Dialog ──────────────────────────────────────────────────────────
-@st.dialog("Detalhes do OKR", width="large")
-def okr_dialog(okr: dict, idx: int):
+def okr_dialog_legacy_unused(okr: dict, idx: int):
     accent = okr["accent"]
     status = okr_status_from_krs(okr["krs"])
     sc = STATUS_COLORS[status]
@@ -232,13 +233,110 @@ def okr_dialog(okr: dict, idx: int):
 
 
 # ─── Session State ────────────────────────────────────────────────────
+@st.dialog("Detalhes do OKR", width="large")
+def okr_dialog_kr(okr: dict, idx: int):
+    accent = okr["accent"]
+    status = okr_status_from_krs(okr["krs"])
+    sc = STATUS_COLORS[status]
+    selected_kr_idx = st.session_state.get("selected_kr_idx", 0)
+    if selected_kr_idx is None or not (0 <= selected_kr_idx < len(okr["krs"])):
+        selected_kr_idx = 0
+        st.session_state["selected_kr_idx"] = selected_kr_idx
+
+    st.markdown(
+        f"""
+        <div style="
+            background: linear-gradient(160deg, #181D2C 0%, #141822 100%);
+            border: 1px solid #2B3350;
+            border-left: 6px solid {accent};
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 12px;
+        ">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <div>
+              <div style="color:{accent};font-weight:800;letter-spacing:1.3px;font-size:0.85rem;">
+                {okr["title"]}
+              </div>
+              <div style="color:#6B7B94;margin-top:6px;line-height:1.35;">
+                {okr["subtitle"]}
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;white-space:nowrap;">
+              <span style="width:10px;height:10px;border-radius:50%;background:{sc};display:inline-block;"></span>
+              <span style="color:#9DB2CC;font-size:0.85rem;">{STATUS_LABELS[status]}</span>
+            </div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.subheader("Key Results (clique para selecionar)")
+    for kr_idx, kr in enumerate(okr["krs"]):
+        is_selected = kr_idx == selected_kr_idx
+        if st.button(
+            f'{"Selecionado - " if is_selected else ""}{kr["name"]} | {kr["val"]}',
+            key=f"select_kr_{idx}_{kr_idx}",
+            use_container_width=True,
+        ):
+            st.session_state["selected_kr_idx"] = kr_idx
+            st.rerun()
+
+        pc = pct_color(kr["pct"])
+        w = min(kr["pct"], 100)
+        pct_text = f'{kr["pct"]}%' if kr["pct"] > 0 else "—"
+        row_border = f"1px solid {accent}" if is_selected else "1px solid rgba(255,255,255,0.04)"
+        row_bg = "rgba(255,255,255,0.03)" if is_selected else "transparent"
+        st.markdown(
+            f"""
+            <div style="padding:10px 10px;border:{row_border};border-radius:10px;background:{row_bg};margin:6px 0;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+                <span style="color:#8090A8;font-size:0.85rem;font-weight:600;">{kr["name"]}</span>
+                <span style="color:#FFF;font-size:0.95rem;font-weight:800;white-space:nowrap;">{kr["val"]}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+                  <div style="width:{w}%;height:100%;background:{pc};"></div>
+                </div>
+                <span style="min-width:36px;text-align:right;color:{pc};font-weight:800;font-size:0.8rem;">{pct_text}</span>
+              </div>
+              <div style="color:#4A5670;font-size:0.75rem;">Ant: {kr["ant"]} · Meta: {kr["meta"]}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+
+    selected_kr = okr["krs"][selected_kr_idx]
+    months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    series = selected_kr.get("chart") or okr.get("chart", [])
+    df = pd.DataFrame({"Mês": months[: len(series)], "Valor": series})
+
+    st.subheader(f'Evolução (últimos 12 meses) - {selected_kr["name"]}')
+    if "chart" not in selected_kr:
+        st.caption("Sem série específica do KR; exibindo a série padrão do OKR.")
+    if len(series) > 0:
+        st.line_chart(df, x="Mês", y="Valor", use_container_width=True)
+    else:
+        st.info("Sem dados de evolução para este KR.")
+
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+    if st.button("Fechar", use_container_width=True, key=f"close_kr_{idx}"):
+        close_okr()
+        st.rerun()
+
+
 if "selected_okr" not in st.session_state:
     st.session_state["selected_okr"] = None
+if "selected_kr_idx" not in st.session_state:
+    st.session_state["selected_kr_idx"] = None
 
 if st.session_state["selected_okr"] is not None:
     i = int(st.session_state["selected_okr"])
     if 0 <= i < len(OKRS):
-        okr_dialog(OKRS[i], i)
+        okr_dialog_kr(OKRS[i], i)
 
 # ─── CSS ─────────────────────────────────────────────────────────────
 st.markdown(
