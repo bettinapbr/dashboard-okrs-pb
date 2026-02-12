@@ -50,62 +50,35 @@ def check_password():
 if not check_password():
     st.stop()
 
-
-# ─── Autenticação Gestor (segunda senha) ─────────────────────────────
-def check_gestor_password():
-    """Autentica gestor com segunda senha para acesso aos KRs Táticos."""
-
-    def gestor_password_entered():
-        if st.session_state.get("gestor_password_input") == st.secrets.get("gestor_password", ""):
-            st.session_state["is_gestor"] = True
-        else:
-            st.session_state["is_gestor"] = False
-            st.session_state["gestor_login_failed"] = True
-        if "gestor_password_input" in st.session_state:
-            del st.session_state["gestor_password_input"]
-
-    if st.session_state.get("is_gestor", False):
-        return
-
-    if st.session_state.get("show_gestor_login", False):
-        st.sidebar.markdown(
-            '<div style="padding:20px 0 10px;">'
-            '<h3 style="color:#34D399;margin:0;">🔐 Acesso Gestor</h3>'
-            '<p style="color:#6B7B94;font-size:0.85rem;">Digite a senha de gestor para acessar KRs Táticos</p>'
-            "</div>",
-            unsafe_allow_html=True,
-        )
-        st.sidebar.text_input(
-            "Senha Gestor",
-            type="password",
-            on_change=gestor_password_entered,
-            key="gestor_password_input",
-        )
-        if st.session_state.get("gestor_login_failed", False):
-            st.sidebar.error("Senha de gestor incorreta.")
-        if st.sidebar.button("Cancelar", key="cancel_gestor"):
-            st.session_state["show_gestor_login"] = False
-            st.session_state["gestor_login_failed"] = False
-            st.rerun()
-
-
-# ─── Session State Defaults ──────────────────────────────────────────
+# ─── Autenticação Gestor (sidebar) ──────────────────────────────────
 if "is_gestor" not in st.session_state:
     st.session_state["is_gestor"] = False
-if "show_gestor_login" not in st.session_state:
-    st.session_state["show_gestor_login"] = False
-if "gestor_login_failed" not in st.session_state:
-    st.session_state["gestor_login_failed"] = False
-if "selected_okr" not in st.session_state:
-    st.session_state["selected_okr"] = None
-if "selected_kr_idx" not in st.session_state:
-    st.session_state["selected_kr_idx"] = None
-if "selected_tatico_okr" not in st.session_state:
-    st.session_state["selected_tatico_okr"] = None
-if "selected_tatico_kr" not in st.session_state:
-    st.session_state["selected_tatico_kr"] = None
 
-check_gestor_password()
+with st.sidebar:
+    if not st.session_state["is_gestor"]:
+        st.markdown(
+            '<p style="color:#A78BFA;font-weight:700;font-size:0.9rem;">🔐 Acesso Gestor</p>'
+            '<p style="color:#6B7B94;font-size:0.78rem;">Digite a senha para acessar KRs Táticos</p>',
+            unsafe_allow_html=True,
+        )
+        gestor_pw = st.text_input("Senha Gestor", type="password", key="gestor_pw_input")
+        if st.button("Entrar como Gestor", key="gestor_login_btn"):
+            if gestor_pw == st.secrets.get("gestor_password", ""):
+                st.session_state["is_gestor"] = True
+                st.rerun()
+            else:
+                st.error("Senha incorreta.")
+    else:
+        st.markdown(
+            '<p style="color:#A78BFA;font-weight:700;font-size:0.9rem;">🔓 Modo Gestor Ativo</p>'
+            '<p style="color:#6B7B94;font-size:0.78rem;">Você tem acesso aos KRs Táticos</p>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Sair do modo gestor", key="gestor_logout_btn"):
+            st.session_state["is_gestor"] = False
+            st.rerun()
+
+IS_GESTOR = st.session_state["is_gestor"]
 
 # ─── Constants ───────────────────────────────────────────────────────
 STATUS_COLORS = {"green": "#34D399", "yellow": "#FBBF24", "red": "#F87171"}
@@ -121,70 +94,23 @@ OKRS = [
         "chart": [8.1, 8.5, 9.2, 9.0, 9.8, 10.2, 10.5, 11.0, 11.3, 11.8, 12.0, 12.4],
         "krs": [
             {
-                "name": "Receita",
-                "val": "R$ 12.4M",
-                "ant": "R$ 11.8M",
-                "meta": "R$ 12.0M",
-                "pct": 100,
+                "name": "Receita", "val": "R$ 12.4M", "ant": "R$ 11.8M", "meta": "R$ 12.0M", "pct": 100,
                 "taticos": [
-                    {
-                        "name": "Aumentar ticket médio em 15%",
-                        "val": "12.8%",
-                        "ant": "10.2%",
-                        "meta": "15%",
-                        "pct": 85,
-                        "chart": [6.0, 7.1, 7.5, 8.0, 8.8, 9.5, 10.0, 10.2, 10.8, 11.5, 12.0, 12.8],
-                    },
-                    {
-                        "name": "Conquistar 20 novos clientes tier 1",
-                        "val": "13",
-                        "ant": "8",
-                        "meta": "20",
-                        "pct": 65,
-                        "chart": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13],
-                    },
+                    {"name": "Aumentar ticket médio em 15%", "val": "12.8%", "ant": "10.2%", "meta": "15%", "pct": 85, "chart": [6.0, 7.1, 7.5, 8.0, 8.8, 9.5, 10.0, 10.2, 10.8, 11.5, 12.0, 12.8]},
+                    {"name": "Conquistar 20 novos clientes tier 1", "val": "13", "ant": "8", "meta": "20", "pct": 65, "chart": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13]},
                 ],
             },
             {
-                "name": "Receita Nacional (NB)",
-                "val": "R$ 8.7M",
-                "ant": "R$ 8.2M",
-                "meta": "R$ 8.5M",
-                "pct": 100,
+                "name": "Receita Nacional (NB)", "val": "R$ 8.7M", "ant": "R$ 8.2M", "meta": "R$ 8.5M", "pct": 100,
                 "taticos": [
-                    {
-                        "name": "Expandir para 3 novas verticais",
-                        "val": "3",
-                        "ant": "1",
-                        "meta": "3",
-                        "pct": 100,
-                        "chart": [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3],
-                    },
+                    {"name": "Expandir para 3 novas verticais", "val": "3", "ant": "1", "meta": "3", "pct": 100, "chart": [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3]},
                 ],
             },
             {
-                "name": "Receita Internacional (XB)",
-                "val": "R$ 3.7M",
-                "ant": "R$ 3.5M",
-                "meta": "R$ 4.0M",
-                "pct": 93,
+                "name": "Receita Internacional (XB)", "val": "R$ 3.7M", "ant": "R$ 3.5M", "meta": "R$ 4.0M", "pct": 93,
                 "taticos": [
-                    {
-                        "name": "Fechar parceria LATAM",
-                        "val": "70%",
-                        "ant": "40%",
-                        "meta": "100%",
-                        "pct": 70,
-                        "chart": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 65, 70],
-                    },
-                    {
-                        "name": "Ativar 10 merchants no México",
-                        "val": "4",
-                        "ant": "2",
-                        "meta": "10",
-                        "pct": 40,
-                        "chart": [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4],
-                    },
+                    {"name": "Fechar parceria LATAM", "val": "70%", "ant": "40%", "meta": "100%", "pct": 70, "chart": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 65, 70]},
+                    {"name": "Ativar 10 merchants no México", "val": "4", "ant": "2", "meta": "10", "pct": 40, "chart": [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]},
                 ],
             },
         ],
@@ -197,88 +123,27 @@ OKRS = [
         "chart": [1.2, 1.4, 1.6, 1.8, 2.0, 2.1, 2.3, 2.5, 2.7, 2.8, 2.9, 3.1],
         "krs": [
             {
-                "name": "Receita prod. < 24 meses",
-                "val": "R$ 3.1M",
-                "ant": "R$ 2.9M",
-                "meta": "R$ 3.0M",
-                "pct": 100,
+                "name": "Receita prod. < 24 meses", "val": "R$ 3.1M", "ant": "R$ 2.9M", "meta": "R$ 3.0M", "pct": 100,
                 "taticos": [
-                    {
-                        "name": "Lançar 2 produtos novos no semestre",
-                        "val": "2",
-                        "ant": "1",
-                        "meta": "2",
-                        "pct": 100,
-                        "chart": [0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2],
-                    },
+                    {"name": "Lançar 2 produtos novos no semestre", "val": "2", "ant": "1", "meta": "2", "pct": 100, "chart": [0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2]},
                 ],
             },
             {
-                "name": "% clientes c/ novos prod.",
-                "val": "34%",
-                "ant": "31%",
-                "meta": "35%",
-                "pct": 97,
+                "name": "% clientes c/ novos prod.", "val": "34%", "ant": "31%", "meta": "35%", "pct": 97,
                 "taticos": [
-                    {
-                        "name": "Campanha de adoção Q3/Q4",
-                        "val": "88%",
-                        "ant": "60%",
-                        "meta": "90%",
-                        "pct": 98,
-                        "chart": [20, 30, 40, 45, 50, 55, 60, 65, 72, 78, 84, 88],
-                    },
+                    {"name": "Campanha de adoção Q3/Q4", "val": "88%", "ant": "60%", "meta": "90%", "pct": 98, "chart": [20, 30, 40, 45, 50, 55, 60, 65, 72, 78, 84, 88]},
                 ],
             },
+            {"name": "% clientes c/ novas func.", "val": "28%", "ant": "25%", "meta": "30", "pct": 93, "taticos": []},
             {
-                "name": "% clientes c/ novas func.",
-                "val": "28%",
-                "ant": "25%",
-                "meta": "30",
-                "pct": 93,
-                "taticos": [],
-            },
-            {
-                "name": "Taxa de Falhas Críticas",
-                "val": "0.12%",
-                "ant": "0.15%",
-                "meta": "≤ 0.10%",
-                "pct": 83,
+                "name": "Taxa de Falhas Críticas", "val": "0.12%", "ant": "0.15%", "meta": "≤ 0.10%", "pct": 83,
                 "taticos": [
-                    {
-                        "name": "Cobertura de testes > 85%",
-                        "val": "82%",
-                        "ant": "75%",
-                        "meta": "85%",
-                        "pct": 96,
-                        "chart": [60, 63, 65, 68, 70, 72, 74, 75, 77, 79, 81, 82],
-                    },
-                    {
-                        "name": "Reduzir MTTR para < 2h",
-                        "val": "2.3h",
-                        "ant": "3.1h",
-                        "meta": "≤ 2h",
-                        "pct": 87,
-                        "chart": [4.0, 3.8, 3.5, 3.3, 3.1, 3.0, 2.9, 2.7, 2.6, 2.5, 2.4, 2.3],
-                    },
+                    {"name": "Cobertura de testes > 85%", "val": "82%", "ant": "75%", "meta": "85%", "pct": 96, "chart": [60, 63, 65, 68, 70, 72, 74, 75, 77, 79, 81, 82]},
+                    {"name": "Reduzir MTTR para < 2h", "val": "2.3h", "ant": "3.1h", "meta": "≤ 2h", "pct": 87, "chart": [4.0, 3.8, 3.5, 3.3, 3.1, 3.0, 2.9, 2.7, 2.6, 2.5, 2.4, 2.3]},
                 ],
             },
-            {
-                "name": "Índice inovação percebida",
-                "val": "8.1",
-                "ant": "7.8",
-                "meta": "8.0",
-                "pct": 100,
-                "taticos": [],
-            },
-            {
-                "name": "Taxa de conversão",
-                "val": "72.5%",
-                "ant": "70.1%",
-                "meta": "72.0%",
-                "pct": 100,
-                "taticos": [],
-            },
+            {"name": "Índice inovação percebida", "val": "8.1", "ant": "7.8", "meta": "8.0", "pct": 100, "taticos": []},
+            {"name": "Taxa de conversão", "val": "72.5%", "ant": "70.1%", "meta": "72.0%", "pct": 100, "taticos": []},
         ],
     },
     {
@@ -289,70 +154,23 @@ OKRS = [
         "chart": [310, 305, 298, 295, 290, 288, 285, 283, 280, 282, 284, 285],
         "krs": [
             {
-                "name": "Receita por pessoa",
-                "val": "R$ 285K",
-                "ant": "R$ 290K",
-                "meta": "R$ 300K",
-                "pct": 95,
+                "name": "Receita por pessoa", "val": "R$ 285K", "ant": "R$ 290K", "meta": "R$ 300K", "pct": 95,
                 "taticos": [
-                    {
-                        "name": "Automatizar 5 processos manuais",
-                        "val": "4",
-                        "ant": "2",
-                        "meta": "5",
-                        "pct": 80,
-                        "chart": [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4],
-                    },
+                    {"name": "Automatizar 5 processos manuais", "val": "4", "ant": "2", "meta": "5", "pct": 80, "chart": [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4]},
                 ],
             },
             {
-                "name": "Tempo onboarding NB",
-                "val": "12 dias",
-                "ant": "14 dias",
-                "meta": "≤ 10 dias",
-                "pct": 83,
+                "name": "Tempo onboarding NB", "val": "12 dias", "ant": "14 dias", "meta": "≤ 10 dias", "pct": 83,
                 "taticos": [
-                    {
-                        "name": "Implementar checklist digital",
-                        "val": "90%",
-                        "ant": "60%",
-                        "meta": "100%",
-                        "pct": 90,
-                        "chart": [20, 30, 35, 40, 50, 55, 60, 65, 72, 80, 85, 90],
-                    },
-                    {
-                        "name": "Treinar 100% do time comercial",
-                        "val": "85%",
-                        "ant": "60%",
-                        "meta": "100%",
-                        "pct": 85,
-                        "chart": [20, 25, 30, 40, 45, 50, 55, 60, 65, 72, 80, 85],
-                    },
+                    {"name": "Implementar checklist digital", "val": "90%", "ant": "60%", "meta": "100%", "pct": 90, "chart": [20, 30, 35, 40, 50, 55, 60, 65, 72, 80, 85, 90]},
+                    {"name": "Treinar 100% do time comercial", "val": "85%", "ant": "60%", "meta": "100%", "pct": 85, "chart": [20, 25, 30, 40, 45, 50, 55, 60, 65, 72, 80, 85]},
                 ],
             },
+            {"name": "Tempo onboarding XB", "val": "18 dias", "ant": "20 dias", "meta": "≤ 15 dias", "pct": 83, "taticos": []},
             {
-                "name": "Tempo onboarding XB",
-                "val": "18 dias",
-                "ant": "20 dias",
-                "meta": "≤ 15 dias",
-                "pct": 83,
-                "taticos": [],
-            },
-            {
-                "name": "% processos documentados",
-                "val": "67%",
-                "ant": "62%",
-                "meta": "75%",
-                "pct": 89,
+                "name": "% processos documentados", "val": "67%", "ant": "62%", "meta": "75%", "pct": 89,
                 "taticos": [
-                    {
-                        "name": "Mapear todos os processos críticos",
-                        "val": "18/22",
-                        "ant": "12/22",
-                        "meta": "22/22",
-                        "pct": 82,
-                        "chart": [5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18],
-                    },
+                    {"name": "Mapear todos os processos críticos", "val": "18/22", "ant": "12/22", "meta": "22/22", "pct": 82, "chart": [5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18]},
                 ],
             },
         ],
@@ -365,70 +183,23 @@ OKRS = [
         "chart": [58, 60, 62, 63, 64, 66, 67, 68, 69, 70, 71, 72],
         "krs": [
             {
-                "name": "Índice de engajamento",
-                "val": "81%",
-                "ant": "78%",
-                "meta": "80%",
-                "pct": 100,
+                "name": "Índice de engajamento", "val": "81%", "ant": "78%", "meta": "80%", "pct": 100,
                 "taticos": [
-                    {
-                        "name": "Realizar 4 pulses no ano",
-                        "val": "4",
-                        "ant": "3",
-                        "meta": "4",
-                        "pct": 100,
-                        "chart": [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4],
-                    },
-                    {
-                        "name": "Plano de ação por área (100%)",
-                        "val": "92%",
-                        "ant": "70%",
-                        "meta": "100%",
-                        "pct": 92,
-                        "chart": [30, 40, 45, 50, 55, 60, 65, 70, 75, 82, 88, 92],
-                    },
+                    {"name": "Realizar 4 pulses no ano", "val": "4", "ant": "3", "meta": "4", "pct": 100, "chart": [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]},
+                    {"name": "Plano de ação por área (100%)", "val": "92%", "ant": "70%", "meta": "100%", "pct": 92, "chart": [30, 40, 45, 50, 55, 60, 65, 70, 75, 82, 88, 92]},
                 ],
             },
             {
-                "name": "% de certificação interna",
-                "val": "63%",
-                "ant": "58%",
-                "meta": "70%",
-                "pct": 90,
+                "name": "% de certificação interna", "val": "63%", "ant": "58%", "meta": "70%", "pct": 90,
                 "taticos": [
-                    {
-                        "name": "Lançar plataforma de e-learning",
-                        "val": "100%",
-                        "ant": "50%",
-                        "meta": "100%",
-                        "pct": 100,
-                        "chart": [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 100],
-                    },
+                    {"name": "Lançar plataforma de e-learning", "val": "100%", "ant": "50%", "meta": "100%", "pct": 100, "chart": [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100, 100]},
                 ],
             },
+            {"name": "eNPS", "val": "72", "ant": "68", "meta": "70", "pct": 100, "taticos": []},
             {
-                "name": "eNPS",
-                "val": "72",
-                "ant": "68",
-                "meta": "70",
-                "pct": 100,
-                "taticos": [],
-            },
-            {
-                "name": "Pontuação GPTW",
-                "val": "84",
-                "ant": "81",
-                "meta": "85",
-                "pct": 99,
+                "name": "Pontuação GPTW", "val": "84", "ant": "81", "meta": "85", "pct": 99,
                 "taticos": [
-                    {
-                        "name": "Implementar programa de mentoria",
-                        "val": "85%",
-                        "ant": "40%",
-                        "meta": "100%",
-                        "pct": 85,
-                        "chart": [10, 15, 20, 30, 35, 40, 50, 55, 62, 70, 78, 85],
-                    },
+                    {"name": "Implementar programa de mentoria", "val": "85%", "ant": "40%", "meta": "100%", "pct": 85, "chart": [10, 15, 20, 30, 35, 40, 50, 55, 62, 70, 78, 85]},
                 ],
             },
         ],
@@ -441,113 +212,34 @@ OKRS = [
         "chart": [72, 71, 70, 69, 70, 69, 68, 69, 68, 67, 68, 68],
         "krs": [
             {
-                "name": "NPS",
-                "val": "+68",
-                "ant": "+71",
-                "meta": "+75",
-                "pct": 91,
+                "name": "NPS", "val": "+68", "ant": "+71", "meta": "+75", "pct": 91,
                 "taticos": [
-                    {
-                        "name": "Programa de follow-up pós-venda",
-                        "val": "78%",
-                        "ant": "50%",
-                        "meta": "95%",
-                        "pct": 82,
-                        "chart": [20, 28, 35, 40, 45, 50, 55, 60, 65, 70, 75, 78],
-                    },
-                    {
-                        "name": "Reduzir tempo resposta < 4h",
-                        "val": "5.2h",
-                        "ant": "7h",
-                        "meta": "≤ 4h",
-                        "pct": 77,
-                        "chart": [8.0, 7.5, 7.2, 7.0, 6.8, 6.5, 6.2, 6.0, 5.8, 5.5, 5.3, 5.2],
-                    },
+                    {"name": "Programa de follow-up pós-venda", "val": "78%", "ant": "50%", "meta": "95%", "pct": 82, "chart": [20, 28, 35, 40, 45, 50, 55, 60, 65, 70, 75, 78]},
+                    {"name": "Reduzir tempo resposta < 4h", "val": "5.2h", "ant": "7h", "meta": "≤ 4h", "pct": 77, "chart": [8.0, 7.5, 7.2, 7.0, 6.8, 6.5, 6.2, 6.0, 5.8, 5.5, 5.3, 5.2]},
                 ],
             },
             {
-                "name": "% Contas Não Ativadas",
-                "val": "15%",
-                "ant": "17%",
-                "meta": "≤ 10%",
-                "pct": 67,
+                "name": "% Contas Não Ativadas", "val": "15%", "ant": "17%", "meta": "≤ 10%", "pct": 67,
                 "taticos": [
-                    {
-                        "name": "Fluxo de onboarding automatizado",
-                        "val": "70%",
-                        "ant": "30%",
-                        "meta": "100%",
-                        "pct": 70,
-                        "chart": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 65, 70],
-                    },
+                    {"name": "Fluxo de onboarding automatizado", "val": "70%", "ant": "30%", "meta": "100%", "pct": 70, "chart": [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 65, 70]},
                 ],
             },
             {
-                "name": "MRR Churn Rate",
-                "val": "1.8%",
-                "ant": "2.1%",
-                "meta": "≤ 1.5%",
-                "pct": 83,
+                "name": "MRR Churn Rate", "val": "1.8%", "ant": "2.1%", "meta": "≤ 1.5%", "pct": 83,
                 "taticos": [
-                    {
-                        "name": "Health score para top 50 contas",
-                        "val": "42/50",
-                        "ant": "28/50",
-                        "meta": "50/50",
-                        "pct": 84,
-                        "chart": [10, 14, 18, 20, 22, 25, 28, 30, 33, 36, 40, 42],
-                    },
+                    {"name": "Health score para top 50 contas", "val": "42/50", "ant": "28/50", "meta": "50/50", "pct": 84, "chart": [10, 14, 18, 20, 22, 25, 28, 30, 33, 36, 40, 42]},
                 ],
             },
+            {"name": "% atendimentos no SLA", "val": "94%", "ant": "92%", "meta": "97%", "pct": 97, "taticos": []},
             {
-                "name": "% atendimentos no SLA",
-                "val": "94%",
-                "ant": "92%",
-                "meta": "97%",
-                "pct": 97,
-                "taticos": [],
-            },
-            {
-                "name": "Taxa de chargeback",
-                "val": "R$ 142K",
-                "ant": "R$ 155K",
-                "meta": "≤ R$ 120K",
-                "pct": 85,
+                "name": "Taxa de chargeback", "val": "R$ 142K", "ant": "R$ 155K", "meta": "≤ R$ 120K", "pct": 85,
                 "taticos": [
-                    {
-                        "name": "Sistema anti-fraude v2",
-                        "val": "88%",
-                        "ant": "60%",
-                        "meta": "100%",
-                        "pct": 88,
-                        "chart": [25, 30, 35, 40, 48, 55, 60, 65, 70, 78, 84, 88],
-                    },
+                    {"name": "Sistema anti-fraude v2", "val": "88%", "ant": "60%", "meta": "100%", "pct": 88, "chart": [25, 30, 35, 40, 48, 55, 60, 65, 70, 78, 84, 88]},
                 ],
             },
-            {
-                "name": "CSAT",
-                "val": "4.3/5",
-                "ant": "4.2/5",
-                "meta": "4.5/5",
-                "pct": 96,
-                "taticos": [],
-            },
-            {
-                "name": "Indicador de branding",
-                "val": "—",
-                "ant": "—",
-                "meta": "A definir",
-                "pct": 0,
-                "taticos": [],
-            },
-            {
-                "name": "Nº solic./contas ativas",
-                "val": "0.32",
-                "ant": "0.35",
-                "meta": "≤ 0.25",
-                "pct": 78,
-                "taticos": [],
-            },
+            {"name": "CSAT", "val": "4.3/5", "ant": "4.2/5", "meta": "4.5/5", "pct": 96, "taticos": []},
+            {"name": "Indicador de branding", "val": "—", "ant": "—", "meta": "A definir", "pct": 0, "taticos": []},
+            {"name": "Nº solic./contas ativas", "val": "0.32", "ant": "0.35", "meta": "≤ 0.25", "pct": 78, "taticos": []},
         ],
     },
 ]
@@ -576,11 +268,9 @@ def resolve_kr_series(okr: dict, kr: dict, kr_idx: int) -> tuple[list[float], st
     kr_series = kr.get("chart")
     if isinstance(kr_series, list) and len(kr_series) > 0:
         return kr_series, "kr"
-
     okr_series = okr.get("chart", [])
     if not okr_series:
         return [], "none"
-
     amplitude = max(abs(v) for v in okr_series) or 1
     center = (len(okr.get("krs", [])) - 1) / 2
     offset = (kr_idx - center) * (amplitude * 0.015)
@@ -604,8 +294,6 @@ def infer_y_axis_config(kr: dict) -> tuple[str, str]:
         return "Pontos (NPS)", ".0f"
     if "pontuação" in probe or "indice" in probe or "índice" in probe:
         return "Índice", ".2f"
-    if "hora" in probe or "h" in probe:
-        return "Horas", ".1f"
     return "Valor", ",.2f"
 
 
@@ -629,7 +317,7 @@ def close_tatico():
     st.session_state["selected_tatico_kr"] = None
 
 
-# ─── Dialog: KRs Estratégicos (Veja mais) ───────────────────────────
+# ─── Dialog: Detalhes do OKR (Veja mais) — mesma lógica original ────
 @st.dialog("Detalhes do OKR", width="large")
 def okr_dialog_kr(okr: dict, idx: int):
     accent = okr["accent"]
@@ -727,16 +415,8 @@ def okr_dialog_kr(okr: dict, idx: int):
             alt.Chart(df)
             .mark_line(point=True, strokeWidth=2.5)
             .encode(
-                x=alt.X(
-                    "Mês:N",
-                    sort=months,
-                    axis=alt.Axis(title="Mês", labelAngle=0),
-                ),
-                y=alt.Y(
-                    "Valor:Q",
-                    scale=alt.Scale(domain=y_domain, nice=True, zero=False),
-                    axis=alt.Axis(title=y_title, format=y_format),
-                ),
+                x=alt.X("Mês:N", sort=months, axis=alt.Axis(title="Mês", labelAngle=0)),
+                y=alt.Y("Valor:Q", scale=alt.Scale(domain=y_domain, nice=True, zero=False), axis=alt.Axis(title=y_title, format=y_format)),
                 tooltip=[alt.Tooltip("Mês:N", title="Mês"), alt.Tooltip("Valor:Q", title=y_title, format=y_format)],
             )
             .properties(height=320)
@@ -757,8 +437,9 @@ def tatico_dialog(okr: dict, idx: int):
     accent = okr["accent"]
     status = okr_status_from_krs(okr["krs"])
     sc = STATUS_COLORS[status]
+    selected_key = st.session_state.get("selected_tatico_kr", None)
 
-    # ── Header do pilar ──
+    # Header do pilar
     st.markdown(
         f"""
         <div style="
@@ -767,7 +448,7 @@ def tatico_dialog(okr: dict, idx: int):
             border-left: 6px solid {accent};
             border-radius: 18px;
             padding: 18px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         ">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
             <div>
@@ -788,23 +469,19 @@ def tatico_dialog(okr: dict, idx: int):
         unsafe_allow_html=True,
     )
 
-    # ── Identificador do KR tático selecionado: "kr_idx:tatico_idx" ──
-    selected_key = st.session_state.get("selected_tatico_kr", None)
+    st.subheader("Selecione um KR Tático para ver a evolução")
 
-    # ── Iterar por cada KR estratégico como agrupador ──
-    has_any_tatico = False
+    has_any = False
     for kr_idx, kr in enumerate(okr["krs"]):
         taticos = kr.get("taticos", [])
         if not taticos:
             continue
-
-        has_any_tatico = True
+        has_any = True
 
         # Header do KR estratégico (agrupador)
         kr_pc = pct_color(kr["pct"])
         kr_w = min(kr["pct"], 100)
         kr_pct_text = f'{kr["pct"]}%' if kr["pct"] > 0 else "—"
-
         st.markdown(
             f"""
             <div style="
@@ -813,7 +490,7 @@ def tatico_dialog(okr: dict, idx: int):
                 border-left: 3px solid {accent};
                 border-radius: 12px;
                 padding: 14px 16px;
-                margin-top: 8px;
+                margin-top: 12px;
                 margin-bottom: 4px;
             ">
               <div style="display:flex;justify-content:space-between;align-items:baseline;">
@@ -832,33 +509,30 @@ def tatico_dialog(okr: dict, idx: int):
             unsafe_allow_html=True,
         )
 
-        # KRs táticos abaixo desse agrupador
-        for t_idx, tatico in enumerate(taticos):
+        # KRs táticos
+        for t_idx, t in enumerate(taticos):
             t_key = f"{kr_idx}:{t_idx}"
             is_selected = selected_key == t_key
 
-            # Botão de seleção
             if st.button(
-                f'{"▸ " if is_selected else "  "}{tatico["name"]} | {tatico["val"]}',
+                f'{"▸ " if is_selected else "   "}{t["name"]} | {t["val"]}',
                 key=f"sel_tat_{idx}_{kr_idx}_{t_idx}",
                 use_container_width=True,
             ):
                 st.session_state["selected_tatico_kr"] = t_key
                 st.rerun()
 
-            # Card visual do tático
-            t_pc = pct_color(tatico["pct"])
-            t_w = min(tatico["pct"], 100)
-            t_pct_text = f'{tatico["pct"]}%' if tatico["pct"] > 0 else "—"
+            t_pc = pct_color(t["pct"])
+            t_w = min(t["pct"], 100)
+            t_pct_text = f'{t["pct"]}%' if t["pct"] > 0 else "—"
             t_border = f"1px solid {accent}" if is_selected else "1px solid rgba(255,255,255,0.04)"
-            t_bg = "rgba(255,255,255,0.035)" if is_selected else "rgba(255,255,255,0.015)"
-
+            t_bg = "rgba(255,255,255,0.035)" if is_selected else "transparent"
             st.markdown(
                 f"""
-                <div style="padding:10px 14px;border:{t_border};border-radius:10px;background:{t_bg};margin:4px 0 6px 20px;">
+                <div style="padding:10px 14px;border:{t_border};border-radius:10px;background:{t_bg};margin:4px 0 8px 20px;">
                   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-                    <span style="color:#8090A8;font-size:0.8rem;font-weight:600;">↳ {tatico["name"]}</span>
-                    <span style="color:#FFF;font-size:0.88rem;font-weight:700;white-space:nowrap;">{tatico["val"]}</span>
+                    <span style="color:#8090A8;font-size:0.82rem;font-weight:600;">↳ {t["name"]}</span>
+                    <span style="color:#FFF;font-size:0.9rem;font-weight:700;white-space:nowrap;">{t["val"]}</span>
                   </div>
                   <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px;">
                     <div style="flex:1;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
@@ -866,61 +540,45 @@ def tatico_dialog(okr: dict, idx: int):
                     </div>
                     <span style="min-width:30px;text-align:right;color:{t_pc};font-weight:700;font-size:0.7rem;">{t_pct_text}</span>
                   </div>
-                  <div style="color:#4A5670;font-size:0.68rem;">Ant: {tatico["ant"]} · Meta: {tatico["meta"]}</div>
+                  <div style="color:#4A5670;font-size:0.68rem;">Ant: {t["ant"]} · Meta: {t["meta"]}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
-    if not has_any_tatico:
+    if not has_any:
         st.info("Nenhum KR tático cadastrado para este pilar.")
 
-    # ── Gráfico de evolução do KR tático selecionado ──
+    # Gráfico do KR tático selecionado
     st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
-
     if selected_key is not None:
         try:
             sel_kr_idx, sel_t_idx = selected_key.split(":")
             sel_kr_idx, sel_t_idx = int(sel_kr_idx), int(sel_t_idx)
-            selected_tatico = okr["krs"][sel_kr_idx]["taticos"][sel_t_idx]
-            parent_kr_name = okr["krs"][sel_kr_idx]["name"]
+            sel_tatico = okr["krs"][sel_kr_idx]["taticos"][sel_t_idx]
+            parent_name = okr["krs"][sel_kr_idx]["name"]
         except (ValueError, IndexError, KeyError):
-            selected_tatico = None
-            parent_kr_name = ""
+            sel_tatico = None
+            parent_name = ""
 
-        if selected_tatico:
+        if sel_tatico:
             months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-            series = selected_tatico.get("chart", [])
-
-            st.subheader(f'Evolução — {selected_tatico["name"]}')
-            st.caption(f'KR Estratégico: {parent_kr_name}')
-
+            series = sel_tatico.get("chart", [])
+            st.subheader(f'Evolução — {sel_tatico["name"]}')
+            st.caption(f"KR Estratégico: {parent_name}")
             if series:
                 df = pd.DataFrame({"Mês": months[: len(series)], "Valor": series})
-                y_min = min(series)
-                y_max = max(series)
+                y_min, y_max = min(series), max(series)
                 y_pad = (y_max - y_min) * 0.12 if y_max != y_min else max(abs(y_max) * 0.12, 1)
                 y_domain = [y_min - y_pad, y_max + y_pad]
-                y_title, y_format = infer_y_axis_config(selected_tatico)
-
+                y_title, y_format = infer_y_axis_config(sel_tatico)
                 chart = (
                     alt.Chart(df)
                     .mark_line(point=True, strokeWidth=2.5, color="#A78BFA")
                     .encode(
-                        x=alt.X(
-                            "Mês:N",
-                            sort=months,
-                            axis=alt.Axis(title="Mês", labelAngle=0),
-                        ),
-                        y=alt.Y(
-                            "Valor:Q",
-                            scale=alt.Scale(domain=y_domain, nice=True, zero=False),
-                            axis=alt.Axis(title=y_title, format=y_format),
-                        ),
-                        tooltip=[
-                            alt.Tooltip("Mês:N", title="Mês"),
-                            alt.Tooltip("Valor:Q", title=y_title, format=y_format),
-                        ],
+                        x=alt.X("Mês:N", sort=months, axis=alt.Axis(title="Mês", labelAngle=0)),
+                        y=alt.Y("Valor:Q", scale=alt.Scale(domain=y_domain, nice=True, zero=False), axis=alt.Axis(title=y_title, format=y_format)),
+                        tooltip=[alt.Tooltip("Mês:N", title="Mês"), alt.Tooltip("Valor:Q", title=y_title, format=y_format)],
                     )
                     .properties(height=300)
                 )
@@ -930,8 +588,7 @@ def tatico_dialog(okr: dict, idx: int):
     else:
         st.markdown(
             '<div style="text-align:center;color:#4A5670;padding:20px 0;font-size:0.85rem;">'
-            "👆 Selecione um KR tático acima para ver a evolução"
-            "</div>",
+            "👆 Selecione um KR tático acima para ver a evolução</div>",
             unsafe_allow_html=True,
         )
 
@@ -941,7 +598,16 @@ def tatico_dialog(okr: dict, idx: int):
         st.rerun()
 
 
-# ─── Trigger dialogs from session state ──────────────────────────────
+# ─── Session State ───────────────────────────────────────────────────
+if "selected_okr" not in st.session_state:
+    st.session_state["selected_okr"] = None
+if "selected_kr_idx" not in st.session_state:
+    st.session_state["selected_kr_idx"] = None
+if "selected_tatico_okr" not in st.session_state:
+    st.session_state["selected_tatico_okr"] = None
+if "selected_tatico_kr" not in st.session_state:
+    st.session_state["selected_tatico_kr"] = None
+
 if st.session_state["selected_okr"] is not None:
     i = int(st.session_state["selected_okr"])
     if 0 <= i < len(OKRS):
@@ -1054,12 +720,15 @@ st.markdown(
 .c-sub { color: #6B7B94; font-size: 0.76rem; margin-bottom: 14px; line-height: 1.35; }
 
 /* ============================================================
-   BOTÕES "VEJA MAIS" + "KRs TÁTICOS"
+   BOTÕES — overlay sobre o card
+   Caso 1: wrapper direto com botão (1 botão, sem st.columns)
+   Caso 2: stHorizontalBlock (2 botões via st.columns)
    ============================================================ */
-[data-testid="stColumn"] > div > div > div:has([data-testid="stButton"]) {
+
+/* Caso 1: single button wrapper */
+[data-testid="stColumn"] > div > div > div:has(> [data-testid="stButton"]) {
     display: flex !important;
     justify-content: flex-end !important;
-    gap: 6px !important;
     margin-bottom: -44px !important;
     padding-right: 20px !important;
     padding-top: 18px !important;
@@ -1067,12 +736,37 @@ st.markdown(
     z-index: 10 !important;
     pointer-events: none !important;
 }
-
-[data-testid="stColumn"] > div > div > div:has([data-testid="stButton"]) * {
+[data-testid="stColumn"] > div > div > div:has(> [data-testid="stButton"]) * {
     pointer-events: all !important;
 }
 
-/* Estilo pill do botão */
+/* Caso 2: horizontal block wrapper (2 botões) */
+[data-testid="stColumn"] > div > div > [data-testid="stHorizontalBlock"]:has([data-testid="stButton"]) {
+    margin-bottom: -44px !important;
+    padding-right: 20px !important;
+    padding-top: 18px !important;
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
+    justify-content: flex-end !important;
+}
+[data-testid="stColumn"] > div > div > [data-testid="stHorizontalBlock"]:has([data-testid="stButton"]) * {
+    pointer-events: all !important;
+}
+
+/* Reset: inner columns inside horizontal block should NOT get overlay */
+[data-testid="stHorizontalBlock"] [data-testid="stColumn"] > div > div > div:has(> [data-testid="stButton"]) {
+    margin-bottom: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    position: static !important;
+    z-index: auto !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    pointer-events: all !important;
+}
+
+/* Estilo pill para botões nos cards */
 [data-testid="stColumn"] [data-testid="stButton"] button {
     border-radius: 999px !important;
     padding: 5px 14px !important;
@@ -1123,14 +817,6 @@ st.markdown(
     letter-spacing: 0.5px;
 }
 
-/* === GESTOR LOGIN BUTTON (sidebar trigger) === */
-.gestor-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 999;
-}
-
 /* === RESPONSIVE === */
 @media (max-width: 1100px) { .hdr { flex-direction: column; align-items: flex-start; gap: 0.8rem; } }
 @media (max-width: 768px) {
@@ -1165,18 +851,15 @@ attention = sum(1 for s in okr_statuses if s == "yellow")
 at_risk = sum(1 for s in okr_statuses if s == "red")
 valid_pcts = [kr["pct"] for o in OKRS for kr in o["krs"] if kr.get("pct", 0) > 0]
 avg_pct = round(sum(valid_pcts) / len(valid_pcts)) if valid_pcts else 0
-
-# Conta KRs táticos total
 total_taticos = sum(len(kr.get("taticos", [])) for o in OKRS for kr in o["krs"])
 
-summary_gestor_card = ""
-if st.session_state.get("is_gestor", False):
-    summary_gestor_card = f"""
+gestor_card = ""
+if IS_GESTOR:
+    gestor_card = f"""
     <div class="sum-card">
         <div class="sum-val" style="color:#A78BFA">{total_taticos}</div>
         <div class="sum-lbl">KRs Táticos</div>
-    </div>
-    """
+    </div>"""
 
 st.markdown(
     f"""
@@ -1201,34 +884,11 @@ st.markdown(
         <div class="sum-val">{avg_pct}%</div>
         <div class="sum-lbl">Progresso Médio</div>
     </div>
-    {summary_gestor_card}
+    {gestor_card}
 </div>
 """,
     unsafe_allow_html=True,
 )
-
-# ─── Gestor access button (bottom of sidebar) ───────────────────────
-if not st.session_state.get("is_gestor", False):
-    with st.sidebar:
-        st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
-        if st.button("🔐 Acesso Gestor", key="trigger_gestor_login", use_container_width=True):
-            st.session_state["show_gestor_login"] = True
-            st.rerun()
-else:
-    with st.sidebar:
-        st.markdown(
-            '<div style="padding:16px 0;">'
-            '<p style="color:#A78BFA;font-weight:700;font-size:0.9rem;">🔓 Modo Gestor Ativo</p>'
-            '<p style="color:#6B7B94;font-size:0.78rem;">Você tem acesso aos KRs Táticos</p>'
-            "</div>",
-            unsafe_allow_html=True,
-        )
-        if st.button("Sair do modo gestor", key="logout_gestor", use_container_width=True):
-            st.session_state["is_gestor"] = False
-            st.session_state["show_gestor_login"] = False
-            st.session_state["selected_tatico_okr"] = None
-            st.session_state["selected_tatico_kr"] = None
-            st.rerun()
 
 
 # ─── Card Renderer ───────────────────────────────────────────────────
@@ -1258,22 +918,25 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    # ① Botões PRIMEIRO — CSS reposiciona dentro do card header
-    btn_cols = st.columns([1, 1] if st.session_state.get("is_gestor", False) else [1])
+    # ① Botões PRIMEIRO — CSS reposiciona como overlay no card
+    has_taticos = IS_GESTOR and any(kr.get("taticos") for kr in okr["krs"])
 
-    with btn_cols[0]:
+    if has_taticos:
+        # 2 botões lado a lado via st.columns
+        btn_c1, btn_c2 = st.columns(2)
+        with btn_c1:
+            if st.button("Veja mais", key=f"open_{idx}"):
+                open_okr(idx)
+                st.rerun()
+        with btn_c2:
+            if st.button("🎯 Táticos", key=f"open_tat_{idx}"):
+                open_tatico(idx)
+                st.rerun()
+    else:
+        # 1 botão — lógica original
         if st.button("Veja mais", key=f"open_{idx}"):
             open_okr(idx)
             st.rerun()
-
-    if st.session_state.get("is_gestor", False):
-        with btn_cols[-1]:
-            # Verifica se tem táticos neste pilar
-            has_taticos = any(kr.get("taticos") for kr in okr["krs"])
-            if has_taticos:
-                if st.button("🎯 Táticos", key=f"open_tat_{idx}"):
-                    open_tatico(idx)
-                    st.rerun()
 
     # ② Card HTML DEPOIS
     st.markdown(
