@@ -237,13 +237,83 @@ def _to_display(value) -> str:
     return str(value).strip()
 
 
-def _to_display_meta(value) -> str:
+def _format_excel_meta(value, kr_name: str = "") -> str:
+    """Formata o valor da meta preservando o formato original do Excel.
+
+    Lida com os casos comuns:
+    - Percentuais armazenados como decimal (0.85 -> 85%)
+    - Valores monetários
+    - Números inteiros
+    - Strings já formatadas (passam direto)
+    """
     if _is_blank(value):
         return ""
-    if isinstance(value, float):
-        if value.is_integer():
-            return str(int(value))
-        return f"{value:.4f}".rstrip("0").rstrip(".").replace(".", ",")
+
+    # Se já é string com formatação (R$, %, ≤, etc.), preservar como está
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped:
+            return stripped
+        return ""
+
+    # Se é número, precisamos inferir o formato correto
+    if isinstance(value, (int, float)) and not pd.isna(value):
+        num = float(value)
+        name_lower = _normalize_text(kr_name)
+
+        # Detectar se é percentual pelo nome do KR ou pelo valor (0 < x < 1 tipicamente %)
+        pct_terms = (
+            "taxa", "percentual", "clientes", "conversao", "engajamento",
+            "certificacao", "processos", "documentados", "contas", "ativadas",
+            "churn", "atendimentos", "sla", "falhas",
+        )
+        is_likely_pct = any(term in name_lower for term in pct_terms)
+
+        # Se o valor está entre 0 e 1 (exclusive) e o KR sugere percentual,
+        # o Excel provavelmente armazenou como decimal
+        if is_likely_pct and 0 < abs(num) < 1:
+            pct_val = num * 100
+            if pct_val == int(pct_val):
+                return f"{int(pct_val)}%"
+            # Mostrar com até 2 casas decimais
+            return f"{pct_val:.2f}%".rstrip("0").rstrip(".").replace(".", ",") + "%"
+
+        # Se o valor é >= 1 e parece percentual, mostrar como está com %
+        if is_likely_pct and num >= 1:
+            if num == int(num):
+                return f"{int(num)}%"
+            return f"{num:.2f}".rstrip("0").rstrip(".").replace(".", ",") + "%"
+
+        # Detectar se é valor monetário
+        money_terms = ("receita", "r$", "valor", "chargeback")
+        is_likely_money = any(term in name_lower for term in money_terms)
+        if is_likely_money:
+            if num >= 1_000_000:
+                millions = num / 1_000_000
+                if millions == int(millions):
+                    return f"R$ {int(millions)}M"
+                return f"R$ {millions:.1f}M".replace(".", ",")
+            elif num >= 1_000:
+                thousands = num / 1_000
+                if thousands == int(thousands):
+                    return f"R$ {int(thousands)}K"
+                return f"R$ {thousands:.1f}K".replace(".", ",")
+            else:
+                if num == int(num):
+                    return f"R$ {int(num)}"
+                return f"R$ {num:.2f}".replace(".", ",")
+
+        # Detectar dias
+        if "tempo" in name_lower or "onboarding" in name_lower or "dia" in name_lower:
+            if num == int(num):
+                return f"{int(num)} dias"
+            return f"{num:.1f} dias".replace(".", ",")
+
+        # Número genérico
+        if num == int(num):
+            return str(int(num))
+        return f"{num:.4f}".rstrip("0").rstrip(".").replace(".", ",")
+
     return str(value).strip()
 
 
@@ -390,7 +460,13 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
         meta_records = []
 
     # Fast exact-lookup for metas from Excel, keyed by normalized KR name.
-    meta_lookup = {rec["name_norm"]: rec["target_raw"] for rec in meta_records}
+    # Armazena tanto o valor bruto quanto o nome do KR para formatação contextual.
+    meta_lookup = {}
+    for rec in meta_records:
+        meta_lookup[rec["name_norm"]] = {
+            "target_raw": rec["target_raw"],
+            "name": rec["name"],
+        }
 
     updated_okrs = []
     for okr in okrs:
@@ -409,18 +485,39 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
             source_norm = _normalize_text(kr_copy.get("name", ""))
             target_norm = KR_NAME_LINKS.get(source_norm, source_norm)
 
-            # 1) Exact meta lookup (most reliable)
-            target_raw = meta_lookup.get(target_norm, None)
-            if not _is_blank(target_raw):
-                kr_copy["meta"] = _to_display_meta(target_raw)
-            else:
-                # 2) Fallback to fuzzy matching
-                meta_rec = rec
-                if meta_rec is None or _is_blank(meta_rec.get("target_raw", None)):
-                    meta_rec = _find_excel_record_for_kr(kr_copy.get("name", ""), meta_records)
-                if meta_rec is not None and not _is_blank(meta_rec.get("target_raw", None)):
-                    kr_copy["meta"] = _to_display_meta(meta_rec["target_raw"])
+            # ── META: priorizar valor direto do Excel ──
+            meta_resolved = False
 
+            # 1) Lookup exato por nome normalizado
+            meta_entry = meta_lookup.get(target_norm, None)
+            if meta_entry is not None and not _is_blank(meta_entry["target_raw"]):
+                kr_copy["meta"] = _format_excel_meta(
+                    meta_entry["target_raw"],
+                    kr_name=meta_entry["name"],
+                )
+                meta_resolved = True
+
+            # 2) Fallback: buscar no record estratégico encontrado
+            if not meta_resolved and rec is not None and not _is_blank(rec.get("target_raw", None)):
+                kr_copy["meta"] = _format_excel_meta(
+                    rec["target_raw"],
+                    kr_name=rec["name"],
+                )
+                meta_resolved = True
+
+            # 3) Fallback: fuzzy match nos meta_records
+            if not meta_resolved:
+                meta_rec = _find_excel_record_for_kr(kr_copy.get("name", ""), meta_records)
+                if meta_rec is not None and not _is_blank(meta_rec.get("target_raw", None)):
+                    kr_copy["meta"] = _format_excel_meta(
+                        meta_rec["target_raw"],
+                        kr_name=meta_rec["name"],
+                    )
+                    meta_resolved = True
+
+            # 4) Se nenhum Excel match, mantém o hardcoded do OKRS dict (já setado acima)
+
+            # ── VALORES MENSAIS ──
             if rec is not None:
                 if rec.get("has_month_data", False):
                     if not _is_blank(rec["current_raw"]):
