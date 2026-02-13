@@ -69,7 +69,7 @@ STATUS_LABELS = {
     "no_data": "Sem dados",
 }
 BASE_DIR = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
-EXCEL_PATH = BASE_DIR / "Draft Dashboard OKRs.xlsx"
+EXCEL_PATH = BASE_DIR / "Teste.xlsx"
 EXCEL_BASE_SHEET = "Base de dados"
 EXCEL_MONTH_COLUMNS = [
     "Janeiro",
