@@ -364,7 +364,7 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
             # Dashboard always starts blank and is only filled by monthly Excel data.
             kr_copy["val"] = "—"
             kr_copy["ant"] = "—"
-            kr_copy["meta"] = "—"
+            kr_copy["meta"] = ""
             kr_copy["pct"] = 0
             kr_copy["chart"] = []
 
