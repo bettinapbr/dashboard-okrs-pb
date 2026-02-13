@@ -56,8 +56,18 @@ if not check_password():
 
 
 # ─── Constants ───────────────────────────────────────────────────────
-STATUS_COLORS = {"green": "#34D399", "yellow": "#FBBF24", "red": "#F87171"}
-STATUS_LABELS = {"green": "On Track", "yellow": "Atenção", "red": "Em Risco"}
+STATUS_COLORS = {
+    "green": "#34D399",
+    "yellow": "#FBBF24",
+    "red": "#F87171",
+    "no_data": "#6B7B94",
+}
+STATUS_LABELS = {
+    "green": "On Track",
+    "yellow": "Atenção",
+    "red": "Em Risco",
+    "no_data": "Sem dados",
+}
 EXCEL_PATH = Path(r"C:\Users\joao.schramm\Downloads\Draft Dashboard OKRs.xlsx")
 EXCEL_BASE_SHEET = "Base de dados"
 EXCEL_MONTH_COLUMNS = [
@@ -360,9 +370,9 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
 
             rec = _find_excel_record_for_kr(kr_copy.get("name", ""), strategic_records)
             if rec is not None:
+                if not _is_blank(rec["target_raw"]):
+                    kr_copy["meta"] = _to_display(rec["target_raw"])
                 if rec.get("has_month_data", False):
-                    if not _is_blank(rec["target_raw"]):
-                        kr_copy["meta"] = _to_display(rec["target_raw"])
                     if not _is_blank(rec["current_raw"]):
                         kr_copy["val"] = _to_display(rec["current_raw"])
                     if not _is_blank(rec["previous_raw"]):
@@ -382,6 +392,8 @@ OKRS = apply_excel_strategic_data(OKRS, EXCEL_PATH)
 
 # ─── Helpers ─────────────────────────────────────────────────────────
 def pct_color(pct: int) -> str:
+    if pct <= 0:
+        return "#6B7B94"
     if pct >= 95:
         return "#34D399"
     if pct >= 70:
@@ -392,7 +404,7 @@ def pct_color(pct: int) -> str:
 def okr_status_from_krs(krs: list[dict]) -> str:
     pcts = [kr.get("pct", 0) for kr in krs if kr.get("pct", 0) > 0]
     if not pcts:
-        return "yellow"
+        return "no_data"
     if any(p < 70 for p in pcts):
         return "red"
     if any(p < 95 for p in pcts):
