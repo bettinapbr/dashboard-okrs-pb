@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+import re
+import unicodedata
+from pathlib import Path
+from difflib import SequenceMatcher
 
 # ─── Page Config ─────────────────────────────────────────────────────
 st.set_page_config(
@@ -31,6 +35,7 @@ def check_password():
         )
         st.text_input("Senha", type="password", on_change=password_entered, key="password")
         return False
+
     elif not st.session_state["password_correct"]:
         st.markdown(
             '<div style="text-align:center;padding:100px 0;">'
@@ -53,6 +58,51 @@ if not check_password():
 # ─── Constants ───────────────────────────────────────────────────────
 STATUS_COLORS = {"green": "#34D399", "yellow": "#FBBF24", "red": "#F87171"}
 STATUS_LABELS = {"green": "On Track", "yellow": "Atenção", "red": "Em Risco"}
+EXCEL_PATH = Path(r"C:\Users\joao.schramm\Downloads\Draft Dashboard OKRs.xlsx")
+EXCEL_BASE_SHEET = "Base de dados"
+EXCEL_MONTH_COLUMNS = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+]
+
+# Dashboard KR name (normalized) -> target strategic KR label (normalized/partial) from Excel
+KR_NAME_LINKS = {
+    "receita": "receita",
+    "receita nacional nb": "receita nacional nb",
+    "receita internacional xb": "receita internacional xb",
+    "receita prod 24 meses": "receita de produtos com menos de 24 meses",
+    "clientes c novos prod": "clientes enderecaveis que usam novos produtos",
+    "clientes c novas func": "clientes enderecaveis que usam novas funcionalidades",
+    "taxa de falhas criticas": "taxa de falhas criticas",
+    "indice inovacao percebida": "indice de inovacao percebida pesquisa",
+    "taxa de conversao": "taxa de conversao",
+    "receita por pessoa": "receita por pessoa",
+    "tempo onboarding nb": "tempo medio de ciclo de onboarding de merchants nb aceite da proposta ate a primeira transacao todas que foram a processing no mes",
+    "tempo onboarding xb": "tempo medio de ciclo de onboarding de merchants xb digital aceite da proposta ate a primeira transacao todas que foram a processing no mes",
+    "processos documentados": "processos documentados disponiveis de forma sistemica",
+    "indice de engajamento": "indice de engajamento",
+    "de certificacao interna": "de certificacao interna desempenho treinamento formal",
+    "enps": "enps",
+    "pontuacao gptw": "pontuacao gptw",
+    "nps": "nps net promoter score",
+    "contas nao ativadas": "de contas nao ativadas",
+    "mrr churn rate": "mrr churn rate",
+    "atendimentos no sla": "de atendimentos dentro do sla com clientes",
+    "taxa de chargeback": "taxa de chargeback r",
+    "csat": "csat customer satisfaction score",
+    "indicador de branding": "indicador de branding",
+    "n solic contas ativas": "no de solicitacoes ticket no zendesk por no de contas ativas organizacoes zendesk",
+}
 
 # ─── Data ────────────────────────────────────────────────────────────
 OKRS = [
@@ -128,6 +178,205 @@ OKRS = [
     },
 ]
 
+
+def _is_blank(value) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, float) and pd.isna(value):
+        return True
+    return str(value).strip() in {"", "nan", "None"}
+
+
+def _normalize_text(value: str) -> str:
+    value = str(value or "").strip().lower()
+    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    value = re.sub(r"[^a-z0-9]+", " ", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def _parse_numeric(value):
+    if _is_blank(value):
+        return None
+    if isinstance(value, (int, float)) and not pd.isna(value):
+        return float(value)
+
+    raw = str(value).strip().replace("R$", "").replace(" ", "")
+    match = re.search(r"-?\d+(?:[.,]\d+)?", raw)
+    if not match:
+        return None
+
+    token = match.group(0)
+    if "." in token and "," in token:
+        token = token.replace(".", "").replace(",", ".")
+    elif "," in token and "." not in token:
+        token = token.replace(",", ".")
+
+    try:
+        return float(token)
+    except ValueError:
+        return None
+
+
+def _to_display(value) -> str:
+    if _is_blank(value):
+        return "—"
+    if isinstance(value, float):
+        if value.is_integer():
+            return str(int(value))
+        return f"{value:.4f}".rstrip("0").rstrip(".")
+    return str(value).strip()
+
+
+def _compute_progress_pct(kr_name: str, current_value, target_value):
+    current_num = _parse_numeric(current_value)
+    target_num = _parse_numeric(target_value)
+    if current_num is None or target_num is None or target_num == 0:
+        return None
+
+    normalized = _normalize_text(kr_name)
+    lower_is_better_terms = (
+        "falha",
+        "tempo",
+        "churn",
+        "nao ativadas",
+        "chargeback",
+        "solicitacoes",
+    )
+    lower_is_better = any(term in normalized for term in lower_is_better_terms)
+    ratio = (target_num / current_num) if lower_is_better and current_num != 0 else (current_num / target_num)
+    return int(round(max(0.0, min(1.0, ratio)) * 100))
+
+
+def _find_col(columns, preferred_names: list[str], fallback_index: int):
+    for name in preferred_names:
+        if name in columns:
+            return name
+    return columns[fallback_index]
+
+
+@st.cache_data(show_spinner=False)
+def load_excel_strategic_rows(excel_path: str) -> list[dict]:
+    df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
+
+    code_col = _find_col(list(df.columns), ["KRs ESTRATÉGICOS PAGBRASIL 2026"], 1)
+    name_col = _find_col(list(df.columns), ["Unnamed: 2"], 2)
+    meta_col = _find_col(list(df.columns), ["Meta"], 3)
+    atual_col = _find_col(list(df.columns), ["Atual"], 16)
+
+    month_cols = [m for m in EXCEL_MONTH_COLUMNS if m in df.columns]
+    strategic = df[df[code_col].notna() & (df[code_col].astype(str).str.strip() != "")].copy()
+
+    records = []
+    for _, row in strategic.iterrows():
+        kr_name = row.get(name_col, "")
+        if _is_blank(kr_name):
+            continue
+
+        month_raw = [row.get(col) for col in month_cols]
+        month_num = [_parse_numeric(v) for v in month_raw]
+        chart_values = [v for v in month_num if v is not None]
+
+        non_blank_month = [v for v in month_raw if not _is_blank(v)]
+        atual_raw = row.get(atual_col, None)
+        if _is_blank(atual_raw):
+            current_raw = non_blank_month[-1] if non_blank_month else None
+            previous_raw = non_blank_month[-2] if len(non_blank_month) >= 2 else None
+        else:
+            current_raw = atual_raw
+            previous_raw = non_blank_month[-1] if non_blank_month else None
+
+        target_raw = row.get(meta_col, None)
+        pct = _compute_progress_pct(str(kr_name), current_raw, target_raw)
+
+        records.append(
+            {
+                "name": str(kr_name).strip(),
+                "name_norm": _normalize_text(kr_name),
+                "current_raw": current_raw,
+                "previous_raw": previous_raw,
+                "target_raw": target_raw,
+                "chart": chart_values,
+                "pct": pct,
+            }
+        )
+    return records
+
+
+def _find_excel_record_for_kr(kr_name: str, strategic_records: list[dict]):
+    source_norm = _normalize_text(kr_name)
+    target_norm = KR_NAME_LINKS.get(source_norm, source_norm)
+
+    for rec in strategic_records:
+        if rec["name_norm"] == target_norm:
+            return rec
+
+    candidates = []
+    for rec in strategic_records:
+        name_norm = rec["name_norm"]
+        if target_norm in name_norm:
+            candidates.append(rec)
+
+    if len(candidates) == 1:
+        return candidates[0]
+
+    if len(candidates) > 1:
+        candidates.sort(key=lambda item: abs(len(item["name_norm"]) - len(target_norm)))
+        return candidates[0]
+
+    target_tokens = set(target_norm.split())
+    scored = []
+    for rec in strategic_records:
+        name_tokens = set(rec["name_norm"].split())
+        common = target_tokens & name_tokens
+        if not common:
+            continue
+        score = len(common) / max(1, len(target_tokens))
+        similarity = SequenceMatcher(None, target_norm, rec["name_norm"]).ratio()
+        scored.append((score, len(common), similarity, -abs(len(rec["name_norm"]) - len(target_norm)), rec))
+
+    if not scored:
+        return None
+
+    scored.sort(key=lambda item: (item[0], item[1], item[2], item[3]), reverse=True)
+    best = scored[0]
+    return best[4] if (best[0] >= 0.34 or best[2] >= 0.55) else None
+
+
+def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]:
+    if not excel_path.exists():
+        return okrs
+
+    try:
+        strategic_records = load_excel_strategic_rows(str(excel_path))
+    except Exception:
+        return okrs
+
+    updated_okrs = []
+    for okr in okrs:
+        okr_copy = dict(okr)
+        new_krs = []
+        for kr in okr.get("krs", []):
+            kr_copy = dict(kr)
+            rec = _find_excel_record_for_kr(kr_copy.get("name", ""), strategic_records)
+            if rec is not None:
+                kr_copy["val"] = _to_display(rec["current_raw"])
+                if not _is_blank(rec["previous_raw"]):
+                    kr_copy["ant"] = _to_display(rec["previous_raw"])
+                if not _is_blank(rec["target_raw"]):
+                    kr_copy["meta"] = _to_display(rec["target_raw"])
+                if rec["chart"]:
+                    kr_copy["chart"] = rec["chart"]
+                if rec["pct"] is not None:
+                    kr_copy["pct"] = rec["pct"]
+            new_krs.append(kr_copy)
+        okr_copy["krs"] = new_krs
+        updated_okrs.append(okr_copy)
+
+    return updated_okrs
+
+
+OKRS = apply_excel_strategic_data(OKRS, EXCEL_PATH)
+
 # ─── Helpers ─────────────────────────────────────────────────────────
 def pct_color(pct: int) -> str:
     if pct >= 95:
@@ -146,7 +395,6 @@ def okr_status_from_krs(krs: list[dict]) -> str:
     if any(p < 95 for p in pcts):
         return "yellow"
     return "green"
-
 
 def resolve_kr_series(okr: dict, kr: dict, kr_idx: int) -> tuple[list[float], str]:
     """Resolve the chart series for a KR.
@@ -510,7 +758,7 @@ st.markdown(
 
 /* ============================================================
    AÇÕES DO CARD ("Veja mais" e "Squads")
-   Botões acima do card com gap vertical para o título.
+   Escopo pelo key do container para evitar conflito global.
    ============================================================ */
 div[class*="st-key-okr_actions_"] {
     margin-bottom: 12px;
@@ -679,7 +927,7 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    # ① Botões acima do card (com gap do título)
+    # ① Botões PRIMEIRO — mesma posição do header com escopo estável
     with st.container(
         key=f"okr_actions_{idx}",
         horizontal=True,
@@ -693,7 +941,7 @@ def render_card(okr: dict, idx: int) -> None:
         open_okr(idx)
         st.rerun()
 
-    # ② Card HTML
+    # ② Card HTML DEPOIS — botões ficam acima com espaçamento fixo
     st.markdown(
         f"""
         <div class="okr-card" style="border-left:4px solid {accent};">
