@@ -510,26 +510,36 @@ st.markdown(
 
 /* ============================================================
    AÇÕES DO CARD ("Veja mais" e "Squads")
-   Escopo por key para não afetar outros botões do app.
+   Botões acima do card com gap vertical para o título.
    ============================================================ */
 div[class*="st-key-okr_actions_"] {
-    position: relative;
-    z-index: 10;
-    margin-bottom: -44px;
-    padding-right: 20px;
-    padding-top: 18px;
+    margin-bottom: 12px;
+    padding-right: 0;
+    padding-top: 0;
+    overflow: visible;
 }
 div[class*="st-key-okr_actions_"] [data-testid="stHorizontalBlock"] {
-    justify-content: flex-end;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.6rem;
+}
+div[class*="st-key-okr_actions_"] [data-testid="stHorizontalBlock"] > div {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 112px;
 }
 div[class*="st-key-okr_actions_"] [data-testid="stButton"] {
+    flex: 0 0 auto;
     width: auto !important;
 }
 
 /* Estilo pill dos botões do card */
 div[class*="st-key-okr_actions_"] [data-testid="stButton"] button {
+    display: inline-flex !important;
+    justify-content: center !important;
+    width: 100% !important;
     border-radius: 999px !important;
     padding: 5px 14px !important;
     font-size: 0.72rem !important;
@@ -669,21 +679,21 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    # ① Botões no topo direito (mesma lógica visual do "Veja mais")
-    open_clicked = False
-    squads_clicked = False
-    with st.container(key=f"okr_actions_{idx}"):
-        _, btn_col_1, btn_col_2 = st.columns([6.8, 1.6, 1.6], gap="small")
-        with btn_col_1:
-            open_clicked = st.button("Veja mais", key=f"open_{idx}")
-        with btn_col_2:
-            squads_clicked = st.button("Squads", key=f"squads_{idx}")
+    # ① Botões acima do card (com gap do título)
+    with st.container(
+        key=f"okr_actions_{idx}",
+        horizontal=True,
+        horizontal_alignment="left",
+        gap="small",
+    ):
+        open_clicked = st.button("Veja mais", key=f"open_{idx}")
+        squads_clicked = st.button("Squads", key=f"squads_{idx}")
 
     if open_clicked or squads_clicked:
         open_okr(idx)
         st.rerun()
 
-    # ② Card HTML DEPOIS — botões ficam sobrepostos via margin negativo
+    # ② Card HTML
     st.markdown(
         f"""
         <div class="okr-card" style="border-left:4px solid {accent};">
