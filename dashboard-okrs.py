@@ -147,6 +147,7 @@ def okr_status_from_krs(krs: list[dict]) -> str:
         return "yellow"
     return "green"
 
+
 def resolve_kr_series(okr: dict, kr: dict, kr_idx: int) -> tuple[list[float], str]:
     """Resolve the chart series for a KR.
 
@@ -508,28 +509,27 @@ st.markdown(
 .c-sub { color: #6B7B94; font-size: 0.76rem; margin-bottom: 14px; line-height: 1.35; }
 
 /* ============================================================
-   BOTÃO "VEJA MAIS" — renderizado ANTES do card pelo Streamlit,
-   reposicionado visualmente DENTRO do header do card via CSS.
+   AÇÕES DO CARD ("Veja mais" e "Squads")
+   Escopo por key para não afetar outros botões do app.
    ============================================================ */
-
-/* Wrapper do botão: float right + margin negativo pra sobrepor o card abaixo */
-[data-testid="stColumn"] > div > div > div:has([data-testid="stButton"]) {
-    display: flex !important;
-    justify-content: flex-end !important;
-    margin-bottom: -44px !important;
-    padding-right: 20px !important;
-    padding-top: 18px !important;
-    position: relative !important;
-    z-index: 10 !important;
-    pointer-events: none !important;
+div[class*="st-key-okr_actions_"] {
+    position: relative;
+    z-index: 10;
+    margin-bottom: -44px;
+    padding-right: 20px;
+    padding-top: 18px;
+}
+div[class*="st-key-okr_actions_"] [data-testid="stHorizontalBlock"] {
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.35rem;
+}
+div[class*="st-key-okr_actions_"] [data-testid="stButton"] {
+    width: auto !important;
 }
 
-[data-testid="stColumn"] > div > div > div:has([data-testid="stButton"]) * {
-    pointer-events: all !important;
-}
-
-/* Estilo pill do botão */
-[data-testid="stColumn"] [data-testid="stButton"] button {
+/* Estilo pill dos botões do card */
+div[class*="st-key-okr_actions_"] [data-testid="stButton"] button {
     border-radius: 999px !important;
     padding: 5px 14px !important;
     font-size: 0.72rem !important;
@@ -543,7 +543,7 @@ st.markdown(
     white-space: nowrap !important;
     transition: background 180ms ease, border-color 180ms ease;
 }
-[data-testid="stColumn"] [data-testid="stButton"] button:hover {
+div[class*="st-key-okr_actions_"] [data-testid="stButton"] button:hover {
     background: rgba(255,255,255,0.12) !important;
     border-color: rgba(255,255,255,0.30) !important;
 }
@@ -669,12 +669,21 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    # ① Botão PRIMEIRO — CSS vai reposicioná-lo dentro do card header
-    if st.button("Veja mais", key=f"open_{idx}"):
+    # ① Botões no topo direito (mesma lógica visual do "Veja mais")
+    open_clicked = False
+    squads_clicked = False
+    with st.container(key=f"okr_actions_{idx}"):
+        _, btn_col_1, btn_col_2 = st.columns([6.8, 1.6, 1.6], gap="small")
+        with btn_col_1:
+            open_clicked = st.button("Veja mais", key=f"open_{idx}")
+        with btn_col_2:
+            squads_clicked = st.button("Squads", key=f"squads_{idx}")
+
+    if open_clicked or squads_clicked:
         open_okr(idx)
         st.rerun()
 
-    # ② Card HTML DEPOIS — botão fica sobreposto via margin negativo
+    # ② Card HTML DEPOIS — botões ficam sobrepostos via margin negativo
     st.markdown(
         f"""
         <div class="okr-card" style="border-left:4px solid {accent};">
