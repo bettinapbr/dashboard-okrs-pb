@@ -3,6 +3,8 @@ import pandas as pd
 import altair as alt
 import re
 import unicodedata
+import shutil
+import tempfile
 from pathlib import Path
 from difflib import SequenceMatcher
 
@@ -85,6 +87,7 @@ EXCEL_MONTH_COLUMNS = [
     "Novembro",
     "Dezembro",
 ]
+DATA_LOAD_ERROR = None
 
 # Dashboard KR name (normalized) -> target strategic KR label (normalized/partial) from Excel
 KR_NAME_LINKS = {
@@ -275,8 +278,23 @@ def _find_col(columns, preferred_names: list[str], fallback_index: int):
     return columns[fallback_index]
 
 
+def _read_excel_base_df(excel_path: str) -> pd.DataFrame:
+    """Read Excel with a retry via temp copy when the original file is locked."""
+    try:
+        return pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
+    except Exception as first_exc:
+        # Some synced/locked files fail direct open; temp copy usually works.
+        try:
+            src = Path(excel_path)
+            tmp_path = Path(tempfile.gettempdir()) / f"okr_tmp_{src.name}"
+            shutil.copy2(src, tmp_path)
+            return pd.read_excel(tmp_path, sheet_name=EXCEL_BASE_SHEET)
+        except Exception:
+            raise first_exc
+
+
 def load_excel_strategic_rows(excel_path: str) -> list[dict]:
-    df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
+    df = _read_excel_base_df(excel_path)
 
     code_col = _find_col(list(df.columns), ["KRs ESTRATÉGICOS PAGBRASIL 2026"], 1)
     name_col = _find_col(list(df.columns), ["Unnamed: 2"], 2)
@@ -318,7 +336,7 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
 
 
 def load_excel_meta_rows(excel_path: str) -> list[dict]:
-    df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
+    df = _read_excel_base_df(excel_path)
     name_col = _find_col(list(df.columns), ["Unnamed: 2"], 2)
     meta_col = _find_col(list(df.columns), ["Meta"], 3)
 
@@ -380,13 +398,18 @@ def _find_excel_record_for_kr(kr_name: str, strategic_records: list[dict]):
 
 
 def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]:
+    global DATA_LOAD_ERROR
+    DATA_LOAD_ERROR = None
     strategic_records = []
     meta_records = []
     try:
         if excel_path.exists():
             strategic_records = load_excel_strategic_rows(str(excel_path))
             meta_records = load_excel_meta_rows(str(excel_path))
+        else:
+            DATA_LOAD_ERROR = f"Arquivo não encontrado: {excel_path}"
     except Exception:
+        DATA_LOAD_ERROR = "Não foi possível ler a planilha de OKRs."
         strategic_records = []
         meta_records = []
 
@@ -402,7 +425,8 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
             # Dashboard always starts blank and is only filled by monthly Excel data.
             kr_copy["val"] = "—"
             kr_copy["ant"] = "—"
-            kr_copy["meta"] = kr.get("meta", "") if not _is_blank(kr.get("meta", None)) else ""
+            # Meta must come only from Excel (column D for the matched KR in column C).
+            kr_copy["meta"] = ""
             kr_copy["pct"] = 0
             kr_copy["chart"] = []
 
@@ -416,9 +440,7 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
                 kr_copy["meta"] = _to_display_meta(target_raw)
             else:
                 # 2) Fallback to fuzzy matching
-                meta_rec = rec
-                if meta_rec is None or _is_blank(meta_rec.get("target_raw", None)):
-                    meta_rec = _find_excel_record_for_kr(kr_copy.get("name", ""), meta_records)
+                meta_rec = _find_excel_record_for_kr(kr_copy.get("name", ""), meta_records)
                 if meta_rec is not None and not _is_blank(meta_rec.get("target_raw", None)):
                     kr_copy["meta"] = _to_display_meta(meta_rec["target_raw"])
 
@@ -440,6 +462,8 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
 
 
 OKRS = apply_excel_strategic_data(OKRS, EXCEL_PATH)
+if DATA_LOAD_ERROR:
+    st.warning(f"Falha ao carregar Excel ({EXCEL_PATH.name}): {DATA_LOAD_ERROR}")
 
 # ─── Helpers ─────────────────────────────────────────────────────────
 def pct_color(pct: int) -> str:
