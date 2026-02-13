@@ -68,7 +68,8 @@ STATUS_LABELS = {
     "red": "Em Risco",
     "no_data": "Sem dados",
 }
-EXCEL_PATH = Path(r"C:\Users\joao.schramm\Downloads\Draft Dashboard OKRs.xlsx")
+BASE_DIR = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
+EXCEL_PATH = BASE_DIR / "Draft Dashboard OKRs.xlsx"
 EXCEL_BASE_SHEET = "Base de dados"
 EXCEL_MONTH_COLUMNS = [
     "Janeiro",
@@ -120,70 +121,70 @@ OKRS = [
         "title": "CRESCIMENTO",
         "subtitle": "Impulsionar o crescimento sustentável e rentável",
         "accent": "#54CA30",
-        "status": "no_data",
-        "chart": [],
+        "status": "green",
+        "chart": [8.1, 8.5, 9.2, 9.0, 9.8, 10.2, 10.5, 11.0, 11.3, 11.8, 12.0, 12.4],
         "krs": [
-            {"name": "Receita", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Receita Nacional (NB)", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Receita Internacional (XB)", "val": "—", "ant": "—", "meta": "", "pct": 0},
+            {"name": "Receita", "val": "R$ 12.4M", "ant": "R$ 11.8M", "meta": "R$ 12.0M", "pct": 100},
+            {"name": "Receita Nacional (NB)", "val": "R$ 8.7M", "ant": "R$ 8.2M", "meta": "R$ 8.5M", "pct": 100},
+            {"name": "Receita Internacional (XB)", "val": "R$ 3.7M", "ant": "R$ 3.5M", "meta": "R$ 4.0M", "pct": 93},
         ],
     },
     {
         "title": "INOVAÇÃO / PRODUTO",
         "subtitle": "Consolidar liderança em inovação e diferenciação",
         "accent": "#54CA30",
-        "status": "no_data",
-        "chart": [],
+        "status": "green",
+        "chart": [1.2, 1.4, 1.6, 1.8, 2.0, 2.1, 2.3, 2.5, 2.7, 2.8, 2.9, 3.1],
         "krs": [
-            {"name": "Receita prod. < 24 meses", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "% clientes c/ novos prod.", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "% clientes c/ novas func.", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Taxa de Falhas Críticas", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Índice inovação percebida", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Taxa de conversão", "val": "—", "ant": "—", "meta": "", "pct": 0},
+            {"name": "Receita prod. < 24 meses", "val": "R$ 3.1M", "ant": "R$ 2.9M", "meta": "R$ 3.0M", "pct": 100},
+            {"name": "% clientes c/ novos prod.", "val": "34%", "ant": "31%", "meta": "35%", "pct": 97},
+            {"name": "% clientes c/ novas func.", "val": "28%", "ant": "25%", "meta": "30", "pct": 93},
+            {"name": "Taxa de Falhas Críticas", "val": "0.12%", "ant": "0.15%", "meta": "≤ 0.10%", "pct": 83},
+            {"name": "Índice inovação percebida", "val": "8.1", "ant": "7.8", "meta": "8.0", "pct": 100},
+            {"name": "Taxa de conversão", "val": "72.5%", "ant": "70.1%", "meta": "72.0%", "pct": 100},
         ],
     },
     {
         "title": "EXCELÊNCIA OPERACIONAL",
         "subtitle": "Elevar a excelência operacional e eficiência",
         "accent": "#54CA30",
-        "status": "no_data",
-        "chart": [],
+        "status": "yellow",
+        "chart": [310, 305, 298, 295, 290, 288, 285, 283, 280, 282, 284, 285],
         "krs": [
-            {"name": "Receita por pessoa", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Tempo onboarding NB", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Tempo onboarding XB", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "% processos documentados", "val": "—", "ant": "—", "meta": "", "pct": 0},
+            {"name": "Receita por pessoa", "val": "R$ 285K", "ant": "R$ 290K", "meta": "R$ 300K", "pct": 95},
+            {"name": "Tempo onboarding NB", "val": "12 dias", "ant": "14 dias", "meta": "≤ 10 dias", "pct": 83},
+            {"name": "Tempo onboarding XB", "val": "18 dias", "ant": "20 dias", "meta": "≤ 15 dias", "pct": 83},
+            {"name": "% processos documentados", "val": "67%", "ant": "62%", "meta": "75%", "pct": 89},
         ],
     },
     {
         "title": "PESSOAS",
         "subtitle": "Desenvolver pessoas e lideranças para o próximo ciclo",
         "accent": "#0058B5",
-        "status": "no_data",
-        "chart": [],
+        "status": "green",
+        "chart": [58, 60, 62, 63, 64, 66, 67, 68, 69, 70, 71, 72],
         "krs": [
-            {"name": "Índice de engajamento", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "% de certificação interna", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "eNPS", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Pontuação GPTW", "val": "—", "ant": "—", "meta": "", "pct": 0},
+            {"name": "Índice de engajamento", "val": "81%", "ant": "78%", "meta": "80%", "pct": 100},
+            {"name": "% de certificação interna", "val": "63%", "ant": "58%", "meta": "70%", "pct": 90},
+            {"name": "eNPS", "val": "72", "ant": "68", "meta": "70", "pct": 100},
+            {"name": "Pontuação GPTW", "val": "84", "ant": "81", "meta": "85", "pct": 99},
         ],
     },
     {
         "title": "CLIENTES",
         "subtitle": "Garantir experiências fluidas que impulsionem satisfação",
         "accent": "#0058B5",
-        "status": "no_data",
-        "chart": [],
+        "status": "red",
+        "chart": [72, 71, 70, 69, 70, 69, 68, 69, 68, 67, 68, 68],
         "krs": [
-            {"name": "NPS", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "% Contas Não Ativadas", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "MRR Churn Rate", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "% atendimentos no SLA", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Taxa de chargeback", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "CSAT", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Indicador de branding", "val": "—", "ant": "—", "meta": "", "pct": 0},
-            {"name": "Nº solic./contas ativas", "val": "—", "ant": "—", "meta": "", "pct": 0},
+            {"name": "NPS", "val": "+68", "ant": "+71", "meta": "+75", "pct": 91},
+            {"name": "% Contas Não Ativadas", "val": "15%", "ant": "17%", "meta": "≤ 10%", "pct": 67},
+            {"name": "MRR Churn Rate", "val": "1.8%", "ant": "2.1%", "meta": "≤ 1.5%", "pct": 83},
+            {"name": "% atendimentos no SLA", "val": "94%", "ant": "92%", "meta": "97%", "pct": 97},
+            {"name": "Taxa de chargeback", "val": "R$ 142K", "ant": "R$ 155K", "meta": "≤ R$ 120K", "pct": 85},
+            {"name": "CSAT", "val": "4.3/5", "ant": "4.2/5", "meta": "4.5/5", "pct": 96},
+            {"name": "Indicador de branding", "val": "—", "ant": "—", "meta": "A definir", "pct": 0},
+            {"name": "Nº solic./contas ativas", "val": "0.32", "ant": "0.35", "meta": "≤ 0.25", "pct": 78},
         ],
     },
 ]
@@ -237,21 +238,7 @@ def _to_display(value) -> str:
     return str(value).strip()
 
 
-def _to_display_meta(value, display_str=None) -> str:
-    """Display meta preserving original Excel formatting when available.
-
-    Args:
-        value: The raw value (may be float/int/str) used as fallback.
-        display_str: The original string representation read from Excel.
-                     When available, this is preferred to preserve the exact
-                     formatting the user sees in the spreadsheet.
-    """
-    # ── CHANGED: prefer the original string from Excel if available ──
-    if display_str is not None and not _is_blank(display_str):
-        clean = str(display_str).strip()
-        if clean.lower() not in ("nan", "none", ""):
-            return clean
-
+def _to_display_meta(value) -> str:
     if _is_blank(value):
         return ""
     if isinstance(value, float):
@@ -288,21 +275,8 @@ def _find_col(columns, preferred_names: list[str], fallback_index: int):
     return columns[fallback_index]
 
 
-# ── CHANGED: helper to read Excel once as numeric, once as string ────
-def _read_excel_with_string_meta(excel_path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Read the Excel file twice: once normally (for numeric ops) and once as
-    all-strings (to preserve the original formatting of every cell).
-
-    Returns (df_numeric, df_string).
-    """
-    df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
-    df_str = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET, dtype=str)
-    return df, df_str
-
-
 def load_excel_strategic_rows(excel_path: str) -> list[dict]:
-    # ── CHANGED: use dual-read to capture original string formatting ──
-    df, df_str = _read_excel_with_string_meta(excel_path)
+    df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
 
     code_col = _find_col(list(df.columns), ["KRs ESTRATÉGICOS PAGBRASIL 2026"], 1)
     name_col = _find_col(list(df.columns), ["Unnamed: 2"], 2)
@@ -326,18 +300,6 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
         previous_raw = non_blank_month[-2] if len(non_blank_month) >= 2 else None
 
         target_raw = row.get(meta_col, None)
-
-        # ── CHANGED: capture original string from the string-typed DF ──
-        original_idx = row.name  # preserves the original DataFrame index
-        target_display = None
-        if meta_col in df_str.columns:
-            try:
-                target_display = df_str.at[original_idx, meta_col]
-                if _is_blank(target_display):
-                    target_display = None
-            except (KeyError, IndexError):
-                target_display = None
-
         pct = _compute_progress_pct(str(kr_name), current_raw, target_raw) if has_month_data else None
 
         records.append(
@@ -347,7 +309,6 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
                 "current_raw": current_raw,
                 "previous_raw": previous_raw,
                 "target_raw": target_raw,
-                "target_display": target_display,       # ← NEW
                 "chart": chart_values,
                 "pct": pct,
                 "has_month_data": has_month_data,
@@ -357,8 +318,7 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
 
 
 def load_excel_meta_rows(excel_path: str) -> list[dict]:
-    # ── CHANGED: use dual-read to capture original string formatting ──
-    df, df_str = _read_excel_with_string_meta(excel_path)
+    df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
     name_col = _find_col(list(df.columns), ["Unnamed: 2"], 2)
     meta_col = _find_col(list(df.columns), ["Meta"], 3)
 
@@ -369,23 +329,11 @@ def load_excel_meta_rows(excel_path: str) -> list[dict]:
         if _is_blank(kr_name) or _is_blank(target_raw):
             continue
 
-        # ── CHANGED: capture original string ──
-        original_idx = row.name
-        target_display = None
-        if meta_col in df_str.columns:
-            try:
-                target_display = df_str.at[original_idx, meta_col]
-                if _is_blank(target_display):
-                    target_display = None
-            except (KeyError, IndexError):
-                target_display = None
-
         records.append(
             {
                 "name": str(kr_name).strip(),
                 "name_norm": _normalize_text(kr_name),
                 "target_raw": target_raw,
-                "target_display": target_display,       # ← NEW
             }
         )
     return records
@@ -442,14 +390,8 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
         strategic_records = []
         meta_records = []
 
-    # ── CHANGED: meta_lookup now stores both raw and display values ──
-    meta_lookup = {
-        rec["name_norm"]: {
-            "target_raw": rec["target_raw"],
-            "target_display": rec.get("target_display"),
-        }
-        for rec in meta_records
-    }
+    # Fast exact-lookup for metas from Excel, keyed by normalized KR name.
+    meta_lookup = {rec["name_norm"]: rec["target_raw"] for rec in meta_records}
 
     updated_okrs = []
     for okr in okrs:
@@ -468,23 +410,17 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
             source_norm = _normalize_text(kr_copy.get("name", ""))
             target_norm = KR_NAME_LINKS.get(source_norm, source_norm)
 
-            # ── CHANGED: 1) Exact meta lookup — now passes display_str ──
-            meta_entry = meta_lookup.get(target_norm, None)
-            if meta_entry is not None and not _is_blank(meta_entry.get("target_raw")):
-                kr_copy["meta"] = _to_display_meta(
-                    meta_entry["target_raw"],
-                    display_str=meta_entry.get("target_display"),
-                )
+            # 1) Exact meta lookup (most reliable)
+            target_raw = meta_lookup.get(target_norm, None)
+            if not _is_blank(target_raw):
+                kr_copy["meta"] = _to_display_meta(target_raw)
             else:
-                # ── CHANGED: 2) Fuzzy fallback — also passes display_str ──
+                # 2) Fallback to fuzzy matching
                 meta_rec = rec
                 if meta_rec is None or _is_blank(meta_rec.get("target_raw", None)):
                     meta_rec = _find_excel_record_for_kr(kr_copy.get("name", ""), meta_records)
                 if meta_rec is not None and not _is_blank(meta_rec.get("target_raw", None)):
-                    kr_copy["meta"] = _to_display_meta(
-                        meta_rec["target_raw"],
-                        display_str=meta_rec.get("target_display"),
-                    )
+                    kr_copy["meta"] = _to_display_meta(meta_rec["target_raw"])
 
             if rec is not None:
                 if rec.get("has_month_data", False):
@@ -504,37 +440,6 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
 
 
 OKRS = apply_excel_strategic_data(OKRS, EXCEL_PATH)
-
-# ─── Debug: verificar metas lidas do Excel ───────────────────────────
-with st.expander("🔍 Debug — Metas carregadas (remover depois)", expanded=False):
-    debug_rows = []
-    for okr in OKRS:
-        for kr in okr["krs"]:
-            debug_rows.append({
-                "OKR": okr["title"],
-                "KR": kr["name"],
-                "Meta exibida": kr.get("meta", "—"),
-                "Val": kr.get("val", "—"),
-                "Ant": kr.get("ant", "—"),
-                "Pct": kr.get("pct", 0),
-            })
-    st.dataframe(pd.DataFrame(debug_rows), use_container_width=True, hide_index=True)
-
-    # Mostrar também os records brutos do Excel (se existem)
-    try:
-        if EXCEL_PATH.exists():
-            _debug_strategic = load_excel_strategic_rows(str(EXCEL_PATH))
-            _debug_meta = load_excel_meta_rows(str(EXCEL_PATH))
-            st.write(f"📄 Excel encontrado: {EXCEL_PATH}")
-            st.write(f"Strategic rows: {len(_debug_strategic)} | Meta rows: {len(_debug_meta)}")
-            if _debug_meta:
-                st.write("**Meta rows do Excel:**")
-                _dm = pd.DataFrame([{"nome_norm": r["name_norm"], "target_raw": r["target_raw"], "nome": r["name"]} for r in _debug_meta])
-                st.dataframe(_dm, use_container_width=True, hide_index=True)
-        else:
-            st.warning(f"Excel NÃO encontrado em: {EXCEL_PATH}")
-    except Exception as e:
-        st.error(f"Erro ao ler Excel para debug: {e}")
 
 # ─── Helpers ─────────────────────────────────────────────────────────
 def pct_color(pct: int) -> str:
