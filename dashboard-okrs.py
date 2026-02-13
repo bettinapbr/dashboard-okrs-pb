@@ -389,6 +389,9 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
         strategic_records = []
         meta_records = []
 
+    # Fast exact-lookup for metas from Excel, keyed by normalized KR name.
+    meta_lookup = {rec["name_norm"]: rec["target_raw"] for rec in meta_records}
+
     updated_okrs = []
     for okr in okrs:
         okr_copy = dict(okr)
@@ -398,17 +401,25 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
             # Dashboard always starts blank and is only filled by monthly Excel data.
             kr_copy["val"] = "—"
             kr_copy["ant"] = "—"
-            kr_copy["meta"] = ""
+            kr_copy["meta"] = kr.get("meta", "") if not _is_blank(kr.get("meta", None)) else ""
             kr_copy["pct"] = 0
             kr_copy["chart"] = []
 
             rec = _find_excel_record_for_kr(kr_copy.get("name", ""), strategic_records)
-            meta_rec = rec
-            if meta_rec is None or _is_blank(meta_rec.get("target_raw", None)):
-                meta_rec = _find_excel_record_for_kr(kr_copy.get("name", ""), meta_records)
+            source_norm = _normalize_text(kr_copy.get("name", ""))
+            target_norm = KR_NAME_LINKS.get(source_norm, source_norm)
 
-            if meta_rec is not None and not _is_blank(meta_rec.get("target_raw", None)):
-                kr_copy["meta"] = _to_display_meta(meta_rec["target_raw"])
+            # 1) Exact meta lookup (most reliable)
+            target_raw = meta_lookup.get(target_norm, None)
+            if not _is_blank(target_raw):
+                kr_copy["meta"] = _to_display_meta(target_raw)
+            else:
+                # 2) Fallback to fuzzy matching
+                meta_rec = rec
+                if meta_rec is None or _is_blank(meta_rec.get("target_raw", None)):
+                    meta_rec = _find_excel_record_for_kr(kr_copy.get("name", ""), meta_records)
+                if meta_rec is not None and not _is_blank(meta_rec.get("target_raw", None)):
+                    kr_copy["meta"] = _to_display_meta(meta_rec["target_raw"])
 
             if rec is not None:
                 if rec.get("has_month_data", False):
