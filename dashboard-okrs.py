@@ -523,9 +523,13 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
     return updated_okrs
 
 
-OKRS = apply_excel_strategic_data(OKRS, EXCEL_PATH)
-if DATA_LOAD_ERROR:
-    st.warning(f"Falha ao carregar Excel ({EXCEL_PATH}): {DATA_LOAD_ERROR}")
+# Modo apresentação: mantém os números estáticos definidos em OKRS.
+# Para voltar ao modo Excel, altere para True.
+USE_EXCEL_DATA = False
+if USE_EXCEL_DATA:
+    OKRS = apply_excel_strategic_data(OKRS, EXCEL_PATH)
+    if DATA_LOAD_ERROR:
+        st.warning(f"Falha ao carregar Excel ({EXCEL_PATH}): {DATA_LOAD_ERROR}")
 
 # ─── Helpers ─────────────────────────────────────────────────────────
 def pct_color(pct: int) -> str:
