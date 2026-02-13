@@ -274,7 +274,6 @@ def _find_col(columns, preferred_names: list[str], fallback_index: int):
     return columns[fallback_index]
 
 
-@st.cache_data(show_spinner=False)
 def load_excel_strategic_rows(excel_path: str) -> list[dict]:
     df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
 
@@ -317,7 +316,6 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
     return records
 
 
-@st.cache_data(show_spinner=False)
 def load_excel_meta_rows(excel_path: str) -> list[dict]:
     df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
     name_col = _find_col(list(df.columns), ["Unnamed: 2"], 2)
