@@ -237,6 +237,16 @@ def _to_display(value) -> str:
     return str(value).strip()
 
 
+def _to_display_meta(value) -> str:
+    if _is_blank(value):
+        return ""
+    if isinstance(value, float):
+        if value.is_integer():
+            return str(int(value))
+        return f"{value:.4f}".rstrip("0").rstrip(".").replace(".", ",")
+    return str(value).strip()
+
+
 def _compute_progress_pct(kr_name: str, current_value, target_value):
     current_num = _parse_numeric(current_value)
     target_num = _parse_numeric(target_value)
@@ -307,6 +317,29 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
     return records
 
 
+@st.cache_data(show_spinner=False)
+def load_excel_meta_rows(excel_path: str) -> list[dict]:
+    df = pd.read_excel(excel_path, sheet_name=EXCEL_BASE_SHEET)
+    name_col = _find_col(list(df.columns), ["Unnamed: 2"], 2)
+    meta_col = _find_col(list(df.columns), ["Meta"], 3)
+
+    records = []
+    for _, row in df.iterrows():
+        kr_name = row.get(name_col, "")
+        target_raw = row.get(meta_col, None)
+        if _is_blank(kr_name) or _is_blank(target_raw):
+            continue
+
+        records.append(
+            {
+                "name": str(kr_name).strip(),
+                "name_norm": _normalize_text(kr_name),
+                "target_raw": target_raw,
+            }
+        )
+    return records
+
+
 def _find_excel_record_for_kr(kr_name: str, strategic_records: list[dict]):
     source_norm = _normalize_text(kr_name)
     target_norm = KR_NAME_LINKS.get(source_norm, source_norm)
@@ -349,11 +382,14 @@ def _find_excel_record_for_kr(kr_name: str, strategic_records: list[dict]):
 
 def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]:
     strategic_records = []
+    meta_records = []
     try:
         if excel_path.exists():
             strategic_records = load_excel_strategic_rows(str(excel_path))
+            meta_records = load_excel_meta_rows(str(excel_path))
     except Exception:
         strategic_records = []
+        meta_records = []
 
     updated_okrs = []
     for okr in okrs:
@@ -369,9 +405,14 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
             kr_copy["chart"] = []
 
             rec = _find_excel_record_for_kr(kr_copy.get("name", ""), strategic_records)
+            meta_rec = rec
+            if meta_rec is None or _is_blank(meta_rec.get("target_raw", None)):
+                meta_rec = _find_excel_record_for_kr(kr_copy.get("name", ""), meta_records)
+
+            if meta_rec is not None and not _is_blank(meta_rec.get("target_raw", None)):
+                kr_copy["meta"] = _to_display_meta(meta_rec["target_raw"])
+
             if rec is not None:
-                if not _is_blank(rec["target_raw"]):
-                    kr_copy["meta"] = _to_display(rec["target_raw"])
                 if rec.get("has_month_data", False):
                     if not _is_blank(rec["current_raw"]):
                         kr_copy["val"] = _to_display(rec["current_raw"])
