@@ -31,7 +31,6 @@ def check_password():
         )
         st.text_input("Senha", type="password", on_change=password_entered, key="password")
         return False
-
     elif not st.session_state["password_correct"]:
         st.markdown(
             '<div style="text-align:center;padding:100px 0;">'
@@ -670,16 +669,10 @@ def render_card(okr: dict, idx: int) -> None:
             f'</div>'
         )
 
-    # ① Botões PRIMEIRO — CSS reposiciona no header do card
-    btn_col_1, btn_col_2 = st.columns(2)
-    with btn_col_1:
-        if st.button("Veja mais", key=f"open_{idx}"):
-            open_okr(idx)
-            st.rerun()
-    with btn_col_2:
-        if st.button("Squads", key=f"squads_{idx}"):
-            open_okr(idx)
-            st.rerun()
+    # ① Botão PRIMEIRO — CSS vai reposicioná-lo dentro do card header
+    if st.button("Veja mais", key=f"open_{idx}"):
+        open_okr(idx)
+        st.rerun()
 
     # ② Card HTML DEPOIS — botão fica sobreposto via margin negativo
     st.markdown(
