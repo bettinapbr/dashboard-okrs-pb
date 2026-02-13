@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 import re
 import unicodedata
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -71,7 +72,7 @@ STATUS_LABELS = {
     "no_data": "Sem dados",
 }
 BASE_DIR = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
-EXCEL_PATH = BASE_DIR / "Teste.xlsx"
+EXCEL_DEFAULT_FILES = ("Teste.xlsx", "Draft Dashboard OKRs.xlsx")
 EXCEL_BASE_SHEET = "Base de dados"
 EXCEL_MONTH_COLUMNS = [
     "Janeiro",
@@ -88,6 +89,55 @@ EXCEL_MONTH_COLUMNS = [
     "Dezembro",
 ]
 DATA_LOAD_ERROR = None
+
+
+def _sanitize_path_text(value) -> str:
+    text = str(value or "").strip()
+    if (text.startswith('"') and text.endswith('"')) or (text.startswith("'") and text.endswith("'")):
+        text = text[1:-1].strip()
+    return text
+
+
+def _candidate_excel_paths() -> list[Path]:
+    candidates = []
+
+    env_path = _sanitize_path_text(os.environ.get("OKR_EXCEL_PATH", ""))
+    if env_path:
+        candidates.append(Path(env_path))
+
+    secret_path = ""
+    try:
+        if "excel_path" in st.secrets:
+            secret_path = _sanitize_path_text(st.secrets["excel_path"])
+    except Exception:
+        secret_path = ""
+    if secret_path:
+        candidates.append(Path(secret_path))
+
+    for name in EXCEL_DEFAULT_FILES:
+        candidates.append(BASE_DIR / name)
+    for name in EXCEL_DEFAULT_FILES:
+        candidates.append(Path.cwd() / name)
+
+    unique = []
+    seen = set()
+    for path in candidates:
+        key = str(path).strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            unique.append(path)
+    return unique
+
+
+def _resolve_excel_path() -> Path:
+    candidates = _candidate_excel_paths()
+    for path in candidates:
+        if path.exists():
+            return path
+    return candidates[0] if candidates else (BASE_DIR / "Teste.xlsx")
+
+
+EXCEL_PATH = _resolve_excel_path()
 
 # Dashboard KR name (normalized) -> target strategic KR label (normalized/partial) from Excel
 KR_NAME_LINKS = {
@@ -289,8 +339,12 @@ def _read_excel_base_df(excel_path: str) -> pd.DataFrame:
             tmp_path = Path(tempfile.gettempdir()) / f"okr_tmp_{src.name}"
             shutil.copy2(src, tmp_path)
             return pd.read_excel(tmp_path, sheet_name=EXCEL_BASE_SHEET)
-        except Exception:
-            raise first_exc
+        except Exception as second_exc:
+            raise RuntimeError(
+                "Falha ao ler a planilha (leitura direta e via cópia temporária). "
+                f"Direto: {type(first_exc).__name__}: {first_exc} | "
+                f"Cópia: {type(second_exc).__name__}: {second_exc}"
+            ) from second_exc
 
 
 def load_excel_strategic_rows(excel_path: str) -> list[dict]:
@@ -407,9 +461,17 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
             strategic_records = load_excel_strategic_rows(str(excel_path))
             meta_records = load_excel_meta_rows(str(excel_path))
         else:
-            DATA_LOAD_ERROR = f"Arquivo não encontrado: {excel_path}"
-    except Exception:
-        DATA_LOAD_ERROR = "Não foi possível ler a planilha de OKRs."
+            found = [str(p.name) for p in BASE_DIR.glob("*.xlsx")]
+            found_text = ", ".join(found) if found else "nenhum .xlsx no diretório"
+            DATA_LOAD_ERROR = (
+                f"Arquivo não encontrado: {excel_path} | "
+                f"BASE_DIR={BASE_DIR} | arquivos encontrados: {found_text}"
+            )
+    except Exception as exc:
+        DATA_LOAD_ERROR = (
+            f"{type(exc).__name__}: {exc} | "
+            f"EXCEL_PATH={excel_path} | BASE_DIR={BASE_DIR} | CWD={Path.cwd()}"
+        )
         strategic_records = []
         meta_records = []
 
@@ -463,7 +525,7 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
 
 OKRS = apply_excel_strategic_data(OKRS, EXCEL_PATH)
 if DATA_LOAD_ERROR:
-    st.warning(f"Falha ao carregar Excel ({EXCEL_PATH.name}): {DATA_LOAD_ERROR}")
+    st.warning(f"Falha ao carregar Excel ({EXCEL_PATH}): {DATA_LOAD_ERROR}")
 
 # ─── Helpers ─────────────────────────────────────────────────────────
 def pct_color(pct: int) -> str:
