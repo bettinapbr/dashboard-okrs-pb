@@ -261,7 +261,6 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
     code_col = _find_col(list(df.columns), ["KRs ESTRATÉGICOS PAGBRASIL 2026"], 1)
     name_col = _find_col(list(df.columns), ["Unnamed: 2"], 2)
     meta_col = _find_col(list(df.columns), ["Meta"], 3)
-    atual_col = _find_col(list(df.columns), ["Atual"], 16)
 
     month_cols = [m for m in EXCEL_MONTH_COLUMNS if m in df.columns]
     strategic = df[df[code_col].notna() & (df[code_col].astype(str).str.strip() != "")].copy()
@@ -275,18 +274,13 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
         month_raw = [row.get(col) for col in month_cols]
         month_num = [_parse_numeric(v) for v in month_raw]
         chart_values = [v for v in month_num if v is not None]
-
+        has_month_data = len(chart_values) > 0
         non_blank_month = [v for v in month_raw if not _is_blank(v)]
-        atual_raw = row.get(atual_col, None)
-        if _is_blank(atual_raw):
-            current_raw = non_blank_month[-1] if non_blank_month else None
-            previous_raw = non_blank_month[-2] if len(non_blank_month) >= 2 else None
-        else:
-            current_raw = atual_raw
-            previous_raw = non_blank_month[-1] if non_blank_month else None
+        current_raw = non_blank_month[-1] if non_blank_month else None
+        previous_raw = non_blank_month[-2] if len(non_blank_month) >= 2 else None
 
         target_raw = row.get(meta_col, None)
-        pct = _compute_progress_pct(str(kr_name), current_raw, target_raw)
+        pct = _compute_progress_pct(str(kr_name), current_raw, target_raw) if has_month_data else None
 
         records.append(
             {
@@ -297,6 +291,7 @@ def load_excel_strategic_rows(excel_path: str) -> list[dict]:
                 "target_raw": target_raw,
                 "chart": chart_values,
                 "pct": pct,
+                "has_month_data": has_month_data,
             }
         )
     return records
@@ -343,13 +338,12 @@ def _find_excel_record_for_kr(kr_name: str, strategic_records: list[dict]):
 
 
 def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]:
-    if not excel_path.exists():
-        return okrs
-
+    strategic_records = []
     try:
-        strategic_records = load_excel_strategic_rows(str(excel_path))
+        if excel_path.exists():
+            strategic_records = load_excel_strategic_rows(str(excel_path))
     except Exception:
-        return okrs
+        strategic_records = []
 
     updated_okrs = []
     for okr in okrs:
@@ -357,17 +351,26 @@ def apply_excel_strategic_data(okrs: list[dict], excel_path: Path) -> list[dict]
         new_krs = []
         for kr in okr.get("krs", []):
             kr_copy = dict(kr)
+            # Dashboard always starts blank and is only filled by monthly Excel data.
+            kr_copy["val"] = "—"
+            kr_copy["ant"] = "—"
+            kr_copy["meta"] = "—"
+            kr_copy["pct"] = 0
+            kr_copy["chart"] = []
+
             rec = _find_excel_record_for_kr(kr_copy.get("name", ""), strategic_records)
             if rec is not None:
-                kr_copy["val"] = _to_display(rec["current_raw"])
-                if not _is_blank(rec["previous_raw"]):
-                    kr_copy["ant"] = _to_display(rec["previous_raw"])
-                if not _is_blank(rec["target_raw"]):
-                    kr_copy["meta"] = _to_display(rec["target_raw"])
-                if rec["chart"]:
-                    kr_copy["chart"] = rec["chart"]
-                if rec["pct"] is not None:
-                    kr_copy["pct"] = rec["pct"]
+                if rec.get("has_month_data", False):
+                    if not _is_blank(rec["target_raw"]):
+                        kr_copy["meta"] = _to_display(rec["target_raw"])
+                    if not _is_blank(rec["current_raw"]):
+                        kr_copy["val"] = _to_display(rec["current_raw"])
+                    if not _is_blank(rec["previous_raw"]):
+                        kr_copy["ant"] = _to_display(rec["previous_raw"])
+                    if rec["chart"]:
+                        kr_copy["chart"] = rec["chart"]
+                    if rec["pct"] is not None:
+                        kr_copy["pct"] = rec["pct"]
             new_krs.append(kr_copy)
         okr_copy["krs"] = new_krs
         updated_okrs.append(okr_copy)
@@ -399,26 +402,13 @@ def okr_status_from_krs(krs: list[dict]) -> str:
 def resolve_kr_series(okr: dict, kr: dict, kr_idx: int) -> tuple[list[float], str]:
     """Resolve the chart series for a KR.
 
-    Order:
-    1) Explicit kr["chart"]
-    2) Deterministic per-KR derived series from okr["chart"] (so click changes now)
-    3) Empty series
+    Uses only explicit KR series from Excel.
     """
     kr_series = kr.get("chart")
     if isinstance(kr_series, list) and len(kr_series) > 0:
         return kr_series, "kr"
 
-    okr_series = okr.get("chart", [])
-    if not okr_series:
-        return [], "none"
-
-    amplitude = max(abs(v) for v in okr_series) or 1
-    center = (len(okr.get("krs", [])) - 1) / 2
-    offset = (kr_idx - center) * (amplitude * 0.015)
-    slope = ((kr.get("pct", 0) - 85) / 100) * (amplitude * 0.02)
-    midpoint = (len(okr_series) - 1) / 2
-    derived = [round(v + offset + ((i - midpoint) * slope), 2) for i, v in enumerate(okr_series)]
-    return derived, "derived"
+    return [], "none"
 
 
 def infer_y_axis_config(kr: dict) -> tuple[str, str]:
@@ -606,9 +596,7 @@ def okr_dialog_kr(okr: dict, idx: int):
     df = pd.DataFrame({"Mês": months[: len(series)], "Valor": series})
 
     st.subheader(f'Evolução (últimos 12 meses) - {selected_kr["name"]}')
-    if series_source == "derived":
-        st.caption("Série derivada automaticamente para este KR. Para série oficial, preencha `chart` no KR.")
-    elif series_source == "none":
+    if series_source == "none":
         st.caption("Sem dados de série para este KR/OKR.")
     if len(series) > 0:
         y_min = min(series)
